@@ -55,12 +55,6 @@
             flex: 1;
         }
 
-        #scoreboard {
-            width: 250px;
-            border-left: 3px solid #ccc;
-            padding-left: 20px;
-        }
-
         #container {
             position: relative;
             width: 100%;
@@ -158,11 +152,6 @@
     <div id="container"></div>
 </div>
 
-<div id="scoreboard">
-    <h2>Scoreboard</h2>
-    <div id="scoreList"></div>
-</div>
-
 <script>
 let boxes = [];
 let usedColors = [];
@@ -170,7 +159,7 @@ let mode = "POINT";
 let sizeValue = 50;
 
 const MIN_HUE_DISTANCE = 40;
-const TOTAL_STEPS = 16;
+const TOTAL_STEPS = 15;
 
 /* UPDATE LOADING UI */
 function updateLoading(stepName, stepNumber) {
@@ -263,7 +252,6 @@ function addPerson(positionIndex = null) {
     });
 
     updateDeleteMenu();
-    updateScoreboard();
 }
 
 /* AUTO SHRINK IF GRID DOESN'T FIT */
@@ -301,14 +289,12 @@ function deletePerson(index) {
     boxes[index].element.remove();
     boxes.splice(index, 1);
     updateDeleteMenu();
-    updateScoreboard();
 }
 
 /* POINTS */
 function changePoints(index, amount) {
     boxes[index].points += amount;
     boxes[index].element.innerText = boxes[index].points;
-    updateScoreboard();
 }
 
 /* RESET */
@@ -316,22 +302,6 @@ function resetPoints() {
     boxes.forEach((box, i) => {
         box.points = 0;
         box.element.innerText = "0";
-    });
-    updateScoreboard();
-}
-
-/* SCOREBOARD */
-function updateScoreboard() {
-    const scoreList = document.getElementById("scoreList");
-    scoreList.innerHTML = "";
-
-    boxes.forEach((box, i) => {
-        scoreList.innerHTML += `
-            <div style="margin-bottom:10px; font-size:18px;">
-                <span class="colorTag" style="background:${box.color};"></span>
-                ${box.points} points
-            </div>
-        `;
     });
 }
 
@@ -386,7 +356,6 @@ window.addEventListener("load", () => {
 
     const steps = [
         () => updateLoading("INITIATING CONTAINER", step),
-        () => updateLoading("INITIATING SCOREBOARD", step),
         () => updateLoading("INITIATING DELETE MENU", step),
         () => { updateLoading("CALCULATING AUTO-SHRINK", step); autoShrinkIfNeeded(); },
 
