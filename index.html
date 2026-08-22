@@ -84,15 +84,33 @@
         .deleteItem:hover {
             transform: scale(1.2);
         }
+
+        /* Copilot logo */
+        #copilotLogo {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            opacity: 0.85;
+            transition: 0.2s;
+        }
+
+        #copilotLogo:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
+
+<img id="copilotLogo" src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Microsoft_Copilot_Icon.svg">
 
 <div id="leftSide">
     <h1>Points Tool</h1>
 
     <button onclick="addPerson()">Add Person</button>
 
+    <h3>Delete by Color:</h3>
     <div id="deleteMenu"></div>
 
     <button onclick="resetPoints()">Reset All Points</button>
@@ -112,12 +130,24 @@ let usedColors = [];
 let lockPositions = false;
 const GRID_SIZE = 20;
 
-/* Vibrant HSL colors + no repeats */
+/* Distinct HSL colors with minimum spacing */
+const MIN_HUE_DISTANCE = 40;
+
 function randomColor() {
     let hue;
-    do {
+    let safe = false;
+
+    while (!safe) {
         hue = Math.floor(Math.random() * 360);
-    } while (usedColors.includes(hue));
+        safe = true;
+
+        for (let oldHue of usedColors) {
+            if (Math.abs(hue - oldHue) < MIN_HUE_DISTANCE) {
+                safe = false;
+                break;
+            }
+        }
+    }
 
     usedColors.push(hue);
     return `hsl(${hue}, 90%, 50%)`;
@@ -157,7 +187,7 @@ function addPerson() {
     updateScoreboard();
 }
 
-/* CUSTOM DELETE MENU — FIXED */
+/* CUSTOM DELETE MENU */
 function updateDeleteMenu() {
     const menu = document.getElementById("deleteMenu");
     menu.innerHTML = "";
@@ -236,46 +266,4 @@ function makeDraggable(el) {
         if (lockPositions) return;
         isDown = true;
         offsetX = e.clientX - el.offsetLeft;
-        offsetY = e.clientY - el.offsetTop;
-    });
-
-    document.addEventListener("mouseup", function() {
-        if (!isDown) return;
-        isDown = false;
-
-        const container = document.getElementById("container");
-        const rect = container.getBoundingClientRect();
-
-        let snappedLeft = Math.round(el.offsetLeft / GRID_SIZE) * GRID_SIZE;
-        let snappedTop = Math.round(el.offsetTop / GRID_SIZE) * GRID_SIZE;
-
-        snappedLeft = Math.max(0, Math.min(snappedLeft, rect.width - el.offsetWidth));
-        snappedTop = Math.max(0, Math.min(snappedTop, rect.height - el.offsetHeight));
-
-        el.style.left = snappedLeft + "px";
-        el.style.top = snappedTop + "px";
-    });
-
-    document.addEventListener("mousemove", function(e) {
-        if (!isDown || lockPositions) return;
-
-        const container = document.getElementById("container");
-        const rect = container.getBoundingClientRect();
-
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
-
-        const boxWidth = el.offsetWidth;
-        const boxHeight = el.offsetHeight;
-
-        newLeft = Math.max(0, Math.min(newLeft, rect.width - boxWidth));
-        newTop = Math.max(0, Math.min(newTop, rect.height - boxHeight));
-
-        el.style.left = newLeft + "px";
-        el.style.top = newTop + "px";
-    });
-}
-</script>
-
-</body>
-</html>
+        offset
