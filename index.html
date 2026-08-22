@@ -27,6 +27,16 @@
             z-index: 9999;
         }
 
+        #loadPercent {
+            font-size: 28px;
+            margin-top: 10px;
+        }
+
+        #loadStep {
+            font-size: 22px;
+            margin-top: 10px;
+        }
+
         .spinner {
             width: 40px;
             height: 40px;
@@ -122,8 +132,9 @@
 
 <!-- LOADING SCREEN -->
 <div id="loadingScreen">
-    Loading... <span id="loadPercent">0%</span>
     <div class="spinner"></div>
+    <div id="loadPercent">0%</div>
+    <div id="loadStep">INITIATING…</div>
 </div>
 
 <div id="leftSide">
@@ -159,11 +170,13 @@ let mode = "POINT";
 let sizeValue = 50;
 
 const MIN_HUE_DISTANCE = 40;
-const TOTAL_BOXES = 9;
+const TOTAL_STEPS = 16;
 
-/* LOADING SCREEN UPDATE */
-function setProgress(p) {
-    document.getElementById("loadPercent").innerText = p + "%";
+/* UPDATE LOADING UI */
+function updateLoading(stepName, stepNumber) {
+    const percent = Math.floor((stepNumber / TOTAL_STEPS) * 100);
+    document.getElementById("loadPercent").innerText = percent + "%";
+    document.getElementById("loadStep").innerText = stepName + " (" + stepNumber + "/" + TOTAL_STEPS + ")";
 }
 
 /* Distinct HSL colors */
@@ -249,8 +262,6 @@ function addPerson(positionIndex = null) {
         changePoints(index, 1);
     });
 
-    autoShrinkIfNeeded();
-    updateSize();
     updateDeleteMenu();
     updateScoreboard();
 }
@@ -368,35 +379,43 @@ function makeDraggable(el) {
     }
 }
 
-/* ⭐ FREEZE‑PROOF SEQUENTIAL LOADING */
+/* ⭐ FULL SEQUENTIAL SETUP ⭐ */
 window.addEventListener("load", () => {
-    setProgress(0);
 
-    // Let browser finish layout
-    requestAnimationFrame(() => {
-        // Let browser finish painting
-        setTimeout(() => {
+    let step = 1;
 
-            let loaded = 0;
+    const steps = [
+        () => updateLoading("INITIATING CONTAINER", step),
+        () => updateLoading("INITIATING SCOREBOARD", step),
+        () => updateLoading("INITIATING DELETE MENU", step),
+        () => { updateLoading("CALCULATING AUTO-SHRINK", step); autoShrinkIfNeeded(); },
 
-            function loadNextBox() {
-                if (loaded < TOTAL_BOXES) {
-                    addPerson(loaded); // load in 3×3 order
-                    loaded++;
+        () => { updateLoading("CREATING BOX 1", step); addPerson(0); },
+        () => { updateLoading("CREATING BOX 2", step); addPerson(1); },
+        () => { updateLoading("CREATING BOX 3", step); addPerson(2); },
+        () => { updateLoading("CREATING BOX 4", step); addPerson(3); },
+        () => { updateLoading("CREATING BOX 5", step); addPerson(4); },
+        () => { updateLoading("CREATING BOX 6", step); addPerson(5); },
+        () => { updateLoading("CREATING BOX 7", step); addPerson(6); },
+        () => { updateLoading("CREATING BOX 8", step); addPerson(7); },
+        () => { updateLoading("CREATING BOX 9", step); addPerson(8); },
 
-                    const percent = Math.floor((loaded / TOTAL_BOXES) * 100);
-                    setProgress(percent);
+        () => { updateLoading("APPLYING SIZE", step); updateSize(); },
+        () => updateLoading("FINALIZING UI", step),
+        () => updateLoading("COMPLETE", step)
+    ];
 
-                    requestAnimationFrame(loadNextBox);
-                } else {
-                    document.getElementById("loadingScreen").style.display = "none";
-                }
-            }
+    function runNextStep() {
+        if (step <= TOTAL_STEPS) {
+            steps[step - 1]();
+            step++;
+            requestAnimationFrame(runNextStep);
+        } else {
+            document.getElementById("loadingScreen").style.display = "none";
+        }
+    }
 
-            loadNextBox();
-
-        }, 0);
-    });
+    requestAnimationFrame(runNextStep);
 });
 </script>
 
