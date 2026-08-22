@@ -368,26 +368,35 @@ function makeDraggable(el) {
     }
 }
 
-/* SEQUENTIAL 3×3 LOADING */
+/* ⭐ FREEZE‑PROOF SEQUENTIAL LOADING */
 window.addEventListener("load", () => {
-    let loaded = 0;
-
-    function loadNextBox() {
-        if (loaded < TOTAL_BOXES) {
-            addPerson(loaded); // load in 3×3 order
-            loaded++;
-
-            const percent = Math.floor((loaded / TOTAL_BOXES) * 100);
-            setProgress(percent);
-
-            requestAnimationFrame(loadNextBox);
-        } else {
-            document.getElementById("loadingScreen").style.display = "none";
-        }
-    }
-
     setProgress(0);
-    requestAnimationFrame(loadNextBox);
+
+    // Let browser finish layout
+    requestAnimationFrame(() => {
+        // Let browser finish painting
+        setTimeout(() => {
+
+            let loaded = 0;
+
+            function loadNextBox() {
+                if (loaded < TOTAL_BOXES) {
+                    addPerson(loaded); // load in 3×3 order
+                    loaded++;
+
+                    const percent = Math.floor((loaded / TOTAL_BOXES) * 100);
+                    setProgress(percent);
+
+                    requestAnimationFrame(loadNextBox);
+                } else {
+                    document.getElementById("loadingScreen").style.display = "none";
+                }
+            }
+
+            loadNextBox();
+
+        }, 0);
+    });
 });
 </script>
 
