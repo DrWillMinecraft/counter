@@ -159,6 +159,7 @@ let mode = "POINT";
 let sizeValue = 50;
 
 const MIN_HUE_DISTANCE = 40;
+const TOTAL_BOXES = 9;
 
 /* LOADING SCREEN UPDATE */
 function setProgress(p) {
@@ -210,48 +211,8 @@ function updateSize() {
     });
 }
 
-/* CREATE 9 BOXES IN 3×3 GRID */
-function createDefaultGrid() {
-    const container = document.getElementById("container");
-
-    const spacingX = 220;
-    const spacingY = 180;
-
-    let index = 0;
-
-    for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 3; col++) {
-
-            const box = document.createElement("div");
-            box.className = "box";
-
-            const color = randomColor();
-            box.style.borderColor = color;
-
-            box.style.left = (col * spacingX + 40) + "px";
-            box.style.top = (row * spacingY + 40) + "px";
-
-            box.innerText = "0";
-
-            makeDraggable(box);
-            container.appendChild(box);
-
-            boxes.push({ element: box, points: 0, color });
-
-            box.addEventListener("click", () => {
-                if (mode !== "POINT") return;
-                changePoints(index, 1);
-            });
-
-            index++;
-        }
-    }
-
-    setProgress(33);
-}
-
-/* ADD PERSON BUTTON */
-function addPerson() {
+/* ADD PERSON (used for sequential loading too) */
+function addPerson(positionIndex = null) {
     const container = document.getElementById("container");
     const index = boxes.length;
 
@@ -261,8 +222,20 @@ function addPerson() {
     const color = randomColor();
     box.style.borderColor = color;
 
-    box.style.left = (20 + index * 40) + "px";
-    box.style.top = "20px";
+    /* 3×3 ORDERED POSITIONING */
+    if (positionIndex !== null) {
+        const row = Math.floor(positionIndex / 3);
+        const col = positionIndex % 3;
+
+        const spacingX = 220;
+        const spacingY = 180;
+
+        box.style.left = (col * spacingX + 40) + "px";
+        box.style.top = (row * spacingY + 40) + "px";
+    } else {
+        box.style.left = (20 + index * 40) + "px";
+        box.style.top = "20px";
+    }
 
     box.innerText = "0";
 
@@ -276,9 +249,27 @@ function addPerson() {
         changePoints(index, 1);
     });
 
+    autoShrinkIfNeeded();
     updateSize();
     updateDeleteMenu();
     updateScoreboard();
+}
+
+/* AUTO SHRINK IF GRID DOESN'T FIT */
+function autoShrinkIfNeeded() {
+    const container = document.getElementById("container");
+    const rect = container.getBoundingClientRect();
+
+    const maxWidth = rect.width;
+    const maxHeight = rect.height;
+
+    let neededWidth = 40 + 220 * 3;
+    let neededHeight = 40 + 180 * 3;
+
+    if (neededWidth > maxWidth || neededHeight > maxHeight) {
+        document.getElementById("sizeSlider").value = 20;
+        updateSize();
+    }
 }
 
 /* DELETE MENU */
@@ -293,8 +284,6 @@ function updateDeleteMenu() {
         item.onclick = () => deletePerson(i);
         menu.appendChild(item);
     });
-
-    setProgress(66);
 }
 
 function deletePerson(index) {
@@ -311,6 +300,7 @@ function changePoints(index, amount) {
     updateScoreboard();
 }
 
+/* RESET */
 function resetPoints() {
     boxes.forEach((box, i) => {
         box.points = 0;
@@ -332,8 +322,6 @@ function updateScoreboard() {
             </div>
         `;
     });
-
-    setProgress(100);
 }
 
 /* DRAG MODE */
@@ -380,18 +368,26 @@ function makeDraggable(el) {
     }
 }
 
-/* INIT — REAL PROGRESS LOADING */
+/* SEQUENTIAL 3×3 LOADING */
 window.addEventListener("load", () => {
+    let loaded = 0;
+
+    function loadNextBox() {
+        if (loaded < TOTAL_BOXES) {
+            addPerson(loaded); // load in 3×3 order
+            loaded++;
+
+            const percent = Math.floor((loaded / TOTAL_BOXES) * 100);
+            setProgress(percent);
+
+            requestAnimationFrame(loadNextBox);
+        } else {
+            document.getElementById("loadingScreen").style.display = "none";
+        }
+    }
+
     setProgress(0);
-
-    requestAnimationFrame(() => {
-        createDefaultGrid();
-        updateSize();
-        updateDeleteMenu();
-        updateScoreboard();
-
-        document.getElementById("loadingScreen").style.display = "none";
-    });
+    requestAnimationFrame(loadNextBox);
 });
 </script>
 
