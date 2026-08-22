@@ -42,6 +42,9 @@
             border-radius: 8px;
             width: 150px;
             height: 100px;
+
+            /* Glow effect */
+            box-shadow: 0 0 15px currentColor;
         }
 
         .box.locked {
@@ -56,11 +59,11 @@
 
         .colorTag {
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-            margin-right: 6px;
-            border: 2px solid #000;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            margin-right: 10px;
+            border: 3px solid #000;
         }
     </style>
 </head>
@@ -87,14 +90,19 @@
 
 <script>
 let boxes = [];
+let usedColors = [];
 let lockPositions = false;
 const GRID_SIZE = 20;
 
+/* Vibrant HSL colors + no repeats */
 function randomColor() {
-    const r = Math.floor(Math.random()*200);
-    const g = Math.floor(Math.random()*200);
-    const b = Math.floor(Math.random()*200);
-    return `rgb(${r},${g},${b})`;
+    let hue;
+    do {
+        hue = Math.floor(Math.random() * 360);
+    } while (usedColors.includes(hue));
+
+    usedColors.push(hue);
+    return `hsl(${hue}, 90%, 50%)`;
 }
 
 function addPerson() {
@@ -104,11 +112,12 @@ function addPerson() {
     const box = document.createElement("div");
     box.className = "box";
 
-    // Assign random border color
+    /* Assign random color */
     const color = randomColor();
     box.style.borderColor = color;
+    box.style.color = color; // glow matches border
 
-    // Spawn inside container safely
+    /* Spawn inside container safely */
     const containerWidth = container.clientWidth;
     const safeX = Math.min(20 + index * 160, containerWidth - 160);
 
@@ -139,9 +148,7 @@ function updateDeleteList() {
     boxes.forEach((box, i) => {
         const option = document.createElement("option");
         option.value = i;
-        option.innerHTML = `
-            Person ${i+1}
-        `;
+        option.innerHTML = `● Person ${i+1}`;
         option.style.color = box.color;
         option.style.fontWeight = "bold";
         select.appendChild(option);
@@ -157,7 +164,7 @@ function deleteSelected() {
     boxes[index].element.remove();
     boxes.splice(index, 1);
 
-    // Re-label remaining boxes
+    /* Re-label remaining boxes */
     boxes.forEach((box, i) => {
         box.element.querySelector("button:nth-child(1)").setAttribute("onclick", `changePoints(${i}, 1)`);
         box.element.querySelector("button:nth-child(2)").setAttribute("onclick", `changePoints(${i}, -1)`);
