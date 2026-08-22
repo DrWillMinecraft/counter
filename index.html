@@ -121,7 +121,7 @@
 let boxes = [];
 let usedColors = [];
 let mode = "POINT";
-let sizeValue = 50; // slider value
+let sizeValue = 50;
 
 const GRID_SIZE = 20;
 const MIN_HUE_DISTANCE = 40;
@@ -199,8 +199,7 @@ function createDefaultGrid() {
 
             boxes.push({ element: box, points: 0, color });
 
-            /* LEFT CLICK = add point */
-            box.addEventListener("click", (e) => {
+            box.addEventListener("click", () => {
                 if (mode !== "POINT") return;
                 changePoints(index, 1);
             });
@@ -340,8 +339,10 @@ function makeDraggable(el) {
     }
 }
 
-/* ⭐ INIT */
-createDefaultGrid();
+/* ⭐ INIT — FAST LOAD */
+requestAnimationFrame(() => {
+    createDefaultGrid();
+});
 </script>
 
 </body>
