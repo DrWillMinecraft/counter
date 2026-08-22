@@ -42,8 +42,6 @@
             border-radius: 8px;
             width: 150px;
             height: 100px;
-
-            /* Glow effect */
             box-shadow: 0 0 15px currentColor;
         }
 
@@ -52,7 +50,7 @@
             cursor: default;
         }
 
-        button, select {
+        button {
             padding: 5px 10px;
             margin: 5px;
         }
@@ -65,6 +63,27 @@
             margin-right: 10px;
             border: 3px solid #000;
         }
+
+        /* Custom delete menu */
+        #deleteMenu {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .deleteItem {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 3px solid black;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .deleteItem:hover {
+            transform: scale(1.2);
+        }
     </style>
 </head>
 <body>
@@ -74,8 +93,7 @@
 
     <button onclick="addPerson()">Add Person</button>
 
-    <select id="deleteSelect"></select>
-    <button onclick="deleteSelected()">Delete Selected</button>
+    <div id="deleteMenu"></div>
 
     <button onclick="resetPoints()">Reset All Points</button>
     <button onclick="toggleLock()">Lock / Unlock Positions</button>
@@ -112,12 +130,10 @@ function addPerson() {
     const box = document.createElement("div");
     box.className = "box";
 
-    /* Assign random color */
     const color = randomColor();
     box.style.borderColor = color;
-    box.style.color = color; // glow matches border
+    box.style.color = color;
 
-    /* Spawn inside container safely */
     const containerWidth = container.clientWidth;
     const safeX = Math.min(20 + index * 160, containerWidth - 160);
 
@@ -137,47 +153,37 @@ function addPerson() {
 
     boxes.push({ element: box, points: 0, color });
 
-    updateDeleteList();
+    updateDeleteMenu();
     updateScoreboard();
 }
 
-/* DELETE MENU SHOWS ONLY COLOR — FIXED */
-function updateDeleteList() {
-    const select = document.getElementById("deleteSelect");
-    select.innerHTML = "";
+/* CUSTOM DELETE MENU — FIXED */
+function updateDeleteMenu() {
+    const menu = document.getElementById("deleteMenu");
+    menu.innerHTML = "";
 
     boxes.forEach((box, i) => {
-        const option = document.createElement("option");
-        option.value = i;
+        const item = document.createElement("div");
+        item.className = "deleteItem";
+        item.style.background = box.color;
 
-        /* Solid square ALWAYS shows and NEVER turns white */
-        option.textContent = "■";
+        item.onclick = () => deletePerson(i);
 
-        option.style.color = box.color;
-        option.style.fontSize = "22px";
-        option.style.fontWeight = "bold";
-
-        select.appendChild(option);
+        menu.appendChild(item);
     });
 }
 
-function deleteSelected() {
-    const select = document.getElementById("deleteSelect");
-    const index = Number(select.value);
-
-    if (isNaN(index)) return;
-
+function deletePerson(index) {
     boxes[index].element.remove();
     boxes.splice(index, 1);
 
-    /* Re-label remaining boxes */
     boxes.forEach((box, i) => {
         box.element.querySelector("button:nth-child(1)").setAttribute("onclick", `changePoints(${i}, 1)`);
         box.element.querySelector("button:nth-child(2)").setAttribute("onclick", `changePoints(${i}, -1)`);
         box.element.querySelector("div").id = `points${i}`;
     });
 
-    updateDeleteList();
+    updateDeleteMenu();
     updateScoreboard();
 }
 
