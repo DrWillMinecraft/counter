@@ -21,8 +21,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 50px; /* SAFETY BUFFER */
-            padding-bottom: 50px; /* SAFETY BUFFER */
+            padding: 50px 0; /* SAFETY BUFFER */
+            box-sizing: border-box;
             z-index: 9999;
         }
 
@@ -37,10 +37,10 @@
             margin-bottom: 20px;
         }
 
-        /* STRICT 5×5 GRID THAT ALWAYS FITS SCREEN + 50px BUFFER */
+        /* STRICT 5×5 GRID THAT ALWAYS FITS SCREEN */
         #gridContainer {
-            width: calc(min(90vw, 90vh) - 50px);
-            height: calc(min(90vw, 90vh) - 50px);
+            width: min(80vw, 80vh);
+            height: min(80vw, 80vh);
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(5, 1fr);
