@@ -1,494 +1,291 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Points Tool</title>
-
-    <style>
-        body {
-            font-family: Arial;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* START SCREEN */
-        #startScreen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 50px 0; /* SAFETY BUFFER */
-            box-sizing: border-box;
-            z-index: 9999;
-        }
-
-        #startTitle {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        #startDesc {
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
-
-        /* STRICT 5×5 GRID THAT ALWAYS FITS SCREEN */
-        #gridContainer {
-            width: min(80vw, 80vh);
-            height: min(80vw, 80vh);
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: repeat(5, 1fr);
-            gap: 4px;
-            margin-top: 20px;
-        }
-
-        .gridSquare {
-            background: white;
-            border: 1px solid #ccc;
-            cursor: pointer;
-        }
-
-        .highlight {
-            background: #ddd;
-        }
-
-        #confirmBtn {
-            margin-top: 20px;
-            padding: 12px 24px;
-            font-size: 20px;
-            display: none;
-            cursor: pointer;
-        }
-
-        /* LOADING SCREEN */
-        #loadingScreen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: white;
-            color: black;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            z-index: 9998;
-        }
-
-        #loadPercent {
-            font-size: 28px;
-            margin-top: 10px;
-        }
-
-        #loadStep {
-            font-size: 22px;
-            margin-top: 10px;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 5px solid #ccc;
-            border-top-color: black;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-top: 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* MAIN APP */
-        #leftSide {
-            padding: 20px;
-            display: none;
-        }
-
-        #container {
-            position: relative;
-            width: 100%;
-            height: 75vh;
-            border: 2px solid #ccc;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-
-        .box {
-            position: absolute;
-            background: #f0f0f0;
-            border: 4px solid black;
-            border-radius: 10px;
-            box-shadow: 0 0 15px currentColor;
-            transition: transform 0.15s, width 0.15s, height 0.15s, font-size 0.15s;
-            cursor: pointer;
-            user-select: none;
-            color: black;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        #deleteMenu {
-            margin: 10px 0;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .deleteItem {
-            width: 34px;
-            height: 34px;
-            border-radius: 6px;
-            border: 3px solid black;
-            cursor: pointer;
-            transition: transform 0.15s;
-        }
-
-        .deleteItem:hover {
-            transform: scale(1.25);
-        }
-
-        #modeIndicator {
-            font-weight: bold;
-            margin-top: 10px;
-            font-size: 18px;
-        }
-
-        #sizeSlider {
-            width: 200px;
-        }
-    </style>
+<meta charset="UTF-8" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:#111;font-family:sans-serif}
+  #top{height:40px;display:flex;align-items:center;justify-content:center;background:#222}
+  #toggle{padding:6px 12px;border:1px solid #555;border-radius:4px;background:#333;color:#eee;cursor:pointer;font-size:14px}
+  #toggle.drag{background:#2b5}
+  #toggle.point{background:#58b}
+  #main{position:relative;width:100%;height:calc(100vh - 40px)}
+  #corner{
+    position:absolute;
+    width:120px;
+    height:120px;
+    right:10px;
+    bottom:10px;
+    border:2px solid #888;
+    border-radius:8px;
+    background:#222;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:box-shadow .15s,border-color .15s;
+  }
+  #corner.glow{box-shadow:0 0 15px #ff0;border-color:#ff0}
+  .tBox,.sBox{
+    position:absolute;
+    min-width:60px;
+    min-height:40px;
+    padding:6px;
+    border-radius:6px;
+    border:2px solid;
+    background:#1c1c1c;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#eee;
+    user-select:none;
+    cursor:pointer;
+    font-size:16px;
+  }
+  .sBox.noDrag{cursor:default}
+  .splitWrap{
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:row;
+  }
+  .half{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-right:1px solid #444;
+    cursor:pointer;
+  }
+  .half:last-child{border-right:none}
+  .half.plus{background:#264;border-radius:6px 0 0 6px;color:#eee;font-size:12px}
+  .half.undo{background:#642;border-radius:0 6px 6px 0;position:relative}
+  .arrowWrap{
+    width:60%;
+    height:60%;
+    position:relative;
+  }
+  .barDiag,.barHoriz,.barVert,.head{
+    position:absolute;
+    background:#eee;
+  }
+  .barDiag{
+    width:70%;
+    height:6px;
+    left:10%;
+    top:40%;
+    transform:rotate(45deg);
+    transform-origin:center;
+  }
+  .barHoriz{
+    width:50%;
+    height:6px;
+    left:25%;
+    top:65%;
+  }
+  .barVert{
+    width:6px;
+    height:40%;
+    left:20%;
+    top:35%;
+  }
+  .head{
+    width:12px;
+    height:12px;
+    right:10%;
+    top:30%;
+    transform:rotate(45deg);
+  }
+</style>
 </head>
 <body>
-
-<!-- START SCREEN -->
-<div id="startScreen">
-    <div id="startTitle">SELECT BOX SIZE</div>
-    <div id="startDesc">Choose a size by clicking anywhere on the grid.</div>
-
-    <div id="gridContainer"></div>
-
-    <button id="confirmBtn" onclick="confirmSize()">Confirm</button>
+<div id="top">
+  <div id="toggle" class="drag">DRAG</div>
 </div>
-
-<!-- LOADING SCREEN -->
-<div id="loadingScreen">
-    <div class="spinner"></div>
-    <div id="loadPercent">0%</div>
-    <div id="loadStep">INITIATING…</div>
-</div>
-
-<!-- MAIN APP -->
-<div id="leftSide">
-    <h1>Points Tool</h1>
-
-    <button onclick="addPerson()">Add Person</button>
-
-    <div style="margin-top:10px;">
-        <label><b>Box Size:</b></label><br>
-        <input id="sizeSlider" type="range" min="1" max="100" value="50" oninput="updateSize()">
-    </div>
-
-    <button onclick="toggleMode()">Toggle Mode</button>
-    <div id="modeIndicator">Mode: POINT</div>
-
-    <h3>Delete by Color:</h3>
-    <div id="deleteMenu"></div>
-
-    <button onclick="resetPoints()">Reset All Points</button>
-
-    <div id="container"></div>
+<div id="main">
+  <div id="corner"></div>
 </div>
 
 <script>
-let boxes = [];
-let usedColors = [];
-let mode = "POINT";
-let sizeValue = 50;
+(function(){
+  const main=document.getElementById("main");
+  const corner=document.getElementById("corner");
+  const toggle=document.getElementById("toggle");
 
-let selectedRow = null;
-let selectedCol = null;
+  let mode="drag";
+  let drag=null;
+  let students=[];
+  let hist=[];
 
-const MIN_HUE_DISTANCE = 40;
-const TOTAL_STEPS = 15;
+  function col(){
+    return "hsl("+Math.floor(Math.random()*360)+",70%,60%)";
+  }
 
-/* BUILD STRICT 5×5 GRID */
-const gridContainer = document.getElementById("gridContainer");
+  function mkTemplate(){
+    const t=document.createElement("div");
+    t.className="tBox";
+    t.style.borderColor=col();
+    t.textContent="0";
+    corner.innerHTML="";
+    corner.appendChild(t);
+    t.onmousedown=e=>{
+      if(mode!=="drag")return;
+      e.preventDefault();
+      mkNewTemplate();
+      startDrag(t,e,"template");
+    };
+  }
 
-for (let r = 0; r < 5; r++) {
-    for (let c = 0; c < 5; c++) {
-        const sq = document.createElement("div");
-        sq.className = "gridSquare";
-        sq.dataset.row = r;
-        sq.dataset.col = c;
+  function mkNewTemplate(){
+    const t=document.createElement("div");
+    t.className="tBox";
+    t.style.borderColor=col();
+    t.textContent="0";
+    corner.innerHTML="";
+    corner.appendChild(t);
+    t.onmousedown=e=>{
+      if(mode!=="drag")return;
+      e.preventDefault();
+      mkNewTemplate();
+      startDrag(t,e,"template");
+    };
+  }
 
-        sq.onclick = () => selectSquare(r, c);
+  function startDrag(el,e,type){
+    const r=el.getBoundingClientRect();
+    drag={el,type,ox:e.clientX-r.left,oy:e.clientY-r.top};
+    el.style.position="absolute";
+    main.appendChild(el);
+    move(e);
+    window.addEventListener("mousemove",move);
+    window.addEventListener("mouseup",end);
+  }
 
-        gridContainer.appendChild(sq);
+  function move(e){
+    if(!drag)return;
+    const el=drag.el;
+    const m=main.getBoundingClientRect();
+    let x=e.clientX-m.left-drag.ox;
+    let y=e.clientY-m.top-drag.oy;
+    const w=el.offsetWidth,h=el.offsetHeight;
+    x=Math.max(0,Math.min(m.width-w,x));
+    y=Math.max(0,Math.min(m.height-h,y));
+    el.style.left=x+"px";
+    el.style.top=y+"px";
+
+    const c=corner.getBoundingClientRect();
+    const r=el.getBoundingClientRect();
+    const inside=r.left>=c.left&&r.right<=c.right&&r.top>=c.top&&r.bottom<=c.bottom;
+    corner.classList.toggle("glow",inside);
+  }
+
+  function end(){
+    if(!drag)return;
+    const el=drag.el;
+    const type=drag.type;
+    window.removeEventListener("mousemove",move);
+    window.removeEventListener("mouseup",end);
+
+    const c=corner.getBoundingClientRect();
+    const r=el.getBoundingClientRect();
+    const inside=r.left>=c.left&&r.right<=c.right&&r.top>=c.top&&r.bottom<=c.bottom;
+    corner.classList.remove("glow");
+
+    if(type==="template"){
+      if(inside){
+        el.remove();
+      }else{
+        el.className="sBox";
+        students.push(el);
+        enableStudent(el);
+      }
+    }else{
+      if(inside){
+        const i=students.indexOf(el);
+        if(i>=0)students.splice(i,1);
+        el.remove();
+      }
     }
-}
+    drag=null;
+  }
 
-/* SELECT SQUARE */
-function selectSquare(r, c) {
-    selectedRow = r;
-    selectedCol = c;
+  function enableStudent(s){
+    s.onclick=e=>{
+      if(mode==="point"){
+        s.textContent=String(parseInt(s.textContent,10)+1);
+        hist.push({t:"one",s});
+      }
+    };
+    s.onmousedown=e=>{
+      if(mode!=="drag")return;
+      startDrag(s,e,"student");
+    };
+  }
 
-    document.querySelectorAll(".gridSquare").forEach(sq => {
-        const sr = parseInt(sq.dataset.row);
-        const sc = parseInt(sq.dataset.col);
+  function setMode(m){
+    mode=m;
+    if(m==="drag"){
+      toggle.textContent="DRAG";
+      toggle.classList.remove("point");
+      toggle.classList.add("drag");
+      corner.innerHTML="";
+      mkTemplate();
+      students.forEach(s=>s.classList.remove("noDrag"));
+    }else{
+      toggle.textContent="POINT";
+      toggle.classList.remove("drag");
+      toggle.classList.add("point");
+      corner.innerHTML="";
+      const w=document.createElement("div");
+      w.className="splitWrap";
+      const h1=document.createElement("div");
+      h1.className="half plus";
+      h1.textContent="ALL +1";
+      const h2=document.createElement("div");
+      h2.className="half undo";
+      const aw=document.createElement("div");
+      aw.className="arrowWrap";
+      const bd=document.createElement("div");
+      bd.className="barDiag";
+      const bh=document.createElement("div");
+      bh.className="barHoriz";
+      const bv=document.createElement("div");
+      bv.className="barVert";
+      const hd=document.createElement("div");
+      hd.className="head";
+      aw.appendChild(bd);
+      aw.appendChild(bh);
+      aw.appendChild(bv);
+      aw.appendChild(hd);
+      h2.appendChild(aw);
+      w.appendChild(h1);
+      w.appendChild(h2);
+      corner.appendChild(w);
 
-        if (sr <= r && sc <= c) {
-            sq.classList.add("highlight");
-        } else {
-            sq.classList.remove("highlight");
+      h1.onclick=()=>{
+        students.forEach(s=>{
+          s.textContent=String(parseInt(s.textContent,10)+1);
+        });
+        hist.push({t:"all"});
+      };
+      h2.onclick=()=>{
+        const last=hist.pop();
+        if(!last)return;
+        if(last.t==="all"){
+          students.forEach(s=>{
+            s.textContent=String(parseInt(s.textContent,10)-1);
+          });
+        }else if(last.t==="one"){
+          last.s.textContent=String(parseInt(last.s.textContent,10)-1);
         }
-    });
+      };
 
-    document.getElementById("confirmBtn").style.display = "block";
-}
-
-/* CONFIRM SIZE */
-function confirmSize() {
-    const maxIndex = selectedRow * 5 + selectedCol;
-    sizeValue = Math.floor((maxIndex / 24) * 100);
-    document.getElementById("sizeSlider").value = sizeValue;
-
-    document.getElementById("startScreen").style.display = "none";
-    document.getElementById("loadingScreen").style.display = "flex";
-
-    startLoadingSequence();
-}
-
-/* UPDATE LOADING UI */
-function updateLoading(stepName, stepNumber) {
-    const percent = Math.floor((stepNumber / TOTAL_STEPS) * 100);
-    document.getElementById("loadPercent").innerText = percent + "%";
-    document.getElementById("loadStep").innerText =
-        stepName + " (" + stepNumber + "/" + TOTAL_STEPS + ")";
-}
-
-/* Distinct HSL colors */
-function randomColor() {
-    let hue;
-    let safe = false;
-
-    while (!safe) {
-        hue = Math.floor(Math.random() * 360);
-        safe = true;
-
-        for (let oldHue of usedColors) {
-            if (Math.abs(hue - oldHue) < MIN_HUE_DISTANCE) {
-                safe = false;
-                break;
-            }
-        }
+      students.forEach(s=>s.classList.add("noDrag"));
     }
+  }
 
-    usedColors.push(hue);
-    return `hsl(${hue}, 90%, 50%)`;
-}
-
-function toggleMode() {
-    mode = mode === "POINT" ? "DRAG" : "POINT";
-    document.getElementById("modeIndicator").innerText = "Mode: " + mode;
-}
-
-/* UNIVERSAL SIZE SLIDER */
-function updateSize() {
-    sizeValue = document.getElementById("sizeSlider").value;
-
-    const minW = 100, maxW = 260;
-    const minH = 80, maxH = 220;
-    const minFont = 22, maxFont = 40;
-
-    const width = minW + (maxW - minW) * (sizeValue / 100);
-    const height = minH + (maxH - minH) * (sizeValue / 100);
-    const fontSize = minFont + (maxFont - minFont) * (sizeValue / 100);
-
-    boxes.forEach(b => {
-        b.element.style.width = width + "px";
-        b.element.style.height = height + "px";
-        b.element.style.fontSize = fontSize + "px";
-    });
-}
-
-/* ADD PERSON */
-function addPerson(positionIndex = null) {
-    const container = document.getElementById("container");
-    const index = boxes.length;
-
-    const box = document.createElement("div");
-    box.className = "box";
-
-    const color = randomColor();
-    box.style.borderColor = color;
-
-    /* 3×3 ORDERED POSITIONING */
-    if (positionIndex !== null) {
-        const row = Math.floor(positionIndex / 3);
-        const col = positionIndex % 3;
-
-        const spacingX = 220;
-        const spacingY = 180;
-
-        box.style.left = (col * spacingX + 40) + "px";
-        box.style.top = (row * spacingY + 40) + "px";
-    }
-
-    box.innerText = "0";
-
-    makeDraggable(box);
-    container.appendChild(box);
-
-    boxes.push({ element: box, points: 0, color });
-
-    box.addEventListener("click", () => {
-        if (mode !== "POINT") return;
-        changePoints(index, 1);
-    });
-
-    updateDeleteMenu();
-}
-
-/* AUTO SHRINK */
-function autoShrinkIfNeeded() {
-    const container = document.getElementById("container");
-    const rect = container.getBoundingClientRect();
-
-    let neededWidth = 40 + 220 * 3;
-    let neededHeight = 40 + 180 * 3;
-
-    if (neededWidth > rect.width || neededHeight > rect.height) {
-        document.getElementById("sizeSlider").value = 20;
-        updateSize();
-    }
-}
-
-/* DELETE MENU */
-function updateDeleteMenu() {
-    const menu = document.getElementById("deleteMenu");
-    menu.innerHTML = "";
-
-    boxes.forEach((box, i) => {
-        const item = document.createElement("div");
-        item.className = "deleteItem";
-        item.style.background = box.color;
-        item.onclick = () => deletePerson(i);
-        menu.appendChild(item);
-    });
-}
-
-function deletePerson(index) {
-    boxes[index].element.remove();
-    boxes.splice(index, 1);
-    updateDeleteMenu();
-}
-
-/* POINTS */
-function changePoints(index, amount) {
-    boxes[index].points += amount;
-    boxes[index].element.innerText = boxes[index].points;
-}
-
-/* RESET */
-function resetPoints() {
-    boxes.forEach((box, i) => {
-        box.points = 0;
-        box.element.innerText = "0";
-    });
-}
-
-/* DRAG MODE */
-function makeDraggable(el) {
-    let offsetX, offsetY;
-
-    el.addEventListener("mousedown", function(e) {
-        if (mode !== "DRAG") return;
-
-        offsetX = e.clientX - el.offsetLeft;
-        offsetY = e.clientY - el.offsetTop;
-
-        el.isDragging = true;
-
-        document.addEventListener("mousemove", move);
-        document.addEventListener("mouseup", stop);
-    });
-
-    function move(e) {
-        if (!el.isDragging) return;
-
-        const container = document.getElementById("container");
-        const rect = container.getBoundingClientRect();
-
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
-
-        const boxWidth = el.offsetWidth;
-        const boxHeight = el.offsetHeight;
-
-        newLeft = Math.max(0, Math.min(newLeft, rect.width - boxWidth));
-        newTop = Math.max(0, Math.min(newTop, rect.height - boxHeight));
-
-        el.style.left = newLeft + "px";
-        el.style.top = newTop + "px";
-        el.style.transform = "rotate(4deg)";
-    }
-
-    function stop() {
-        el.isDragging = false;
-        el.style.transform = "rotate(0deg)";
-        document.removeEventListener("mousemove", move);
-        document.removeEventListener("mouseup", stop);
-    }
-}
-
-/* ⭐ FULL SEQUENTIAL SETUP ⭐ */
-function startLoadingSequence() {
-    let step = 1;
-
-    const steps = [
-        () => updateLoading("INITIATING CONTAINER", step),
-        () => updateLoading("INITIATING DELETE MENU", step),
-        () => { updateLoading("CALCULATING AUTO-SHRINK", step); autoShrinkIfNeeded(); },
-
-        () => { updateLoading("CREATING BOX 1", step); addPerson(0); },
-        () => { updateLoading("CREATING BOX 2", step); addPerson(1); },
-        () => { updateLoading("CREATING BOX 3", step); addPerson(2); },
-        () => { updateLoading("CREATING BOX 4", step); addPerson(3); },
-        () => { updateLoading("CREATING BOX 5", step); addPerson(4); },
-        () => { updateLoading("CREATING BOX 6", step); addPerson(5); },
-        () => { updateLoading("CREATING BOX 7", step); addPerson(6); },
-        () => { updateLoading("CREATING BOX 8", step); addPerson(7); },
-        () => { updateLoading("CREATING BOX 9", step); addPerson(8); },
-
-        () => { updateLoading("APPLYING SIZE", step); updateSize(); },
-        () => updateLoading("FINALIZING UI", step),
-        () => updateLoading("COMPLETE", step)
-    ];
-
-    function runNextStep() {
-        if (step <= TOTAL_STEPS) {
-            steps[step - 1]();
-            step++;
-            requestAnimationFrame(runNextStep);
-        } else {
-            document.getElementById("loadingScreen").style.display = "none";
-            document.getElementById("leftSide").style.display = "block";
-        }
-    }
-
-    requestAnimationFrame(runNextStep);
-}
+  toggle.onclick=()=>setMode(mode==="drag"?"point":"drag");
+  setMode("drag");
+})();
 </script>
-
 </body>
 </html>
