@@ -118,3 +118,242 @@
         .deleteItem {
             width: 34px;
             height: 34px;
+            border-radius: 6px;
+            border: 3px solid black;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .deleteItem:hover {
+            transform: scale(1.25);
+        }
+    </style>
+</head>
+<body>
+
+<div id="leftSide">
+    <h1>Points Tool</h1>
+
+    <button onclick="addPerson()">Add Person</button>
+
+    <h3>Delete by Color:</h3>
+    <div id="deleteMenu"></div>
+
+    <button onclick="resetPoints()">Reset All Points</button>
+    <button onclick="toggleLock()">Lock / Unlock Positions</button>
+
+    <div id="container"></div>
+</div>
+
+<div id="scoreboard">
+    <h2>Scoreboard</h2>
+    <div id="scoreList"></div>
+</div>
+
+<script>
+let boxes = [];
+let usedColors = [];
+let lockPositions = false;
+const GRID_SIZE = 20;
+const MIN_HUE_DISTANCE = 40;
+
+/* Distinct HSL colors */
+function randomColor() {
+    let hue;
+    let safe = false;
+
+    while (!safe) {
+        hue = Math.floor(Math.random() * 360);
+        safe = true;
+
+        for (let oldHue of usedColors) {
+            if (Math.abs(hue - oldHue) < MIN_HUE_DISTANCE) {
+                safe = false;
+                break;
+            }
+        }
+    }
+
+    usedColors.push(hue);
+    return `hsl(${hue}, 90%, 50%)`;
+}
+
+function addPerson() {
+    const container = document.getElementById("container");
+    const index = boxes.length;
+
+    const box = document.createElement("div");
+    box.className = "box";
+
+    const color = randomColor();
+    box.style.borderColor = color;
+
+    const safeX = Math.min(20 + index * 200, container.clientWidth - 200);
+    box.style.left = safeX + "px";
+    box.style.top = "20px";
+
+    box.innerHTML = `
+        <div class="boxTop">
+            <div class="leftHalf">+</div>
+            <div class="rightHalf">-</div>
+        </div>
+        <div class="boxBottom" id="points${index}">Points: 0</div>
+    `;
+
+    makeDraggable(box);
+    container.appendChild(box);
+
+    boxes.push({ element: box, points: 0, color });
+
+    /* CLICK LOGIC */
+    box.addEventListener("click", (e) => {
+        if (box.isDragging) return;
+
+        if (e.target.classList.contains("leftHalf")) {
+            changePoints(index, 1);
+        } else if (e.target.classList.contains("rightHalf")) {
+            changePoints(index, -1);
+        }
+    });
+
+    updateDeleteMenu();
+    updateScoreboard();
+}
+
+/* DELETE MENU */
+function updateDeleteMenu() {
+    const menu = document.getElementById("deleteMenu");
+    menu.innerHTML = "";
+
+    boxes.forEach((box, i) => {
+        const item = document.createElement("div");
+        item.className = "deleteItem";
+        item.style.background = box.color;
+        item.onclick = () => deletePerson(i);
+        menu.appendChild(item);
+    });
+}
+
+function deletePerson(index) {
+    boxes[index].element.remove();
+    boxes.splice(index, 1);
+
+    boxes.forEach((box, i) => {
+        box.element.querySelector(".boxBottom").id = `points${i}`;
+    });
+
+    updateDeleteMenu();
+    updateScoreboard();
+}
+
+/* POINTS */
+function changePoints(index, amount) {
+    boxes[index].points += amount;
+    document.getElementById("points" + index).innerText = "Points: " + boxes[index].points;
+    updateScoreboard();
+}
+
+function resetPoints() {
+    boxes.forEach((box, i) => {
+        box.points = 0;
+        document.getElementById("points" + i).innerText = "Points: 0";
+    });
+    updateScoreboard();
+}
+
+/* SCOREBOARD */
+function updateScoreboard() {
+    const scoreList = document.getElementById("scoreList");
+    scoreList.innerHTML = "";
+
+    boxes.forEach((box, i) => {
+        scoreList.innerHTML += `
+            <div style="margin-bottom:10px; font-size:18px;">
+                <span class="colorTag" style="background:${box.color};"></span>
+                ${box.points} points
+            </div>
+        `;
+    });
+}
+
+/* LOCK */
+function toggleLock() {
+    lockPositions = !lockPositions;
+
+    boxes.forEach(b => {
+        if (lockPositions) b.element.classList.add("locked");
+        else b.element.classList.remove("locked");
+    });
+
+    alert(lockPositions ? "Positions locked" : "Positions unlocked");
+}
+
+/* HOLD 0.5 SECOND TO DRAG + TILT */
+function makeDraggable(el) {
+    let offsetX, offsetY;
+    let isDown = false;
+    let dragTimeout = null;
+
+    el.isDragging = false;
+
+    el.addEventListener("mousedown", function(e) {
+        if (lockPositions) return;
+
+        isDown = true;
+        el.isDragging = false;
+
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+
+        dragTimeout = setTimeout(() => {
+            el.isDragging = true;
+            el.style.transform = "rotate(4deg)";
+        }, 500); /* 0.5 seconds */
+    });
+
+    document.addEventListener("mouseup", function() {
+        if (!isDown) return;
+
+        isDown = false;
+        clearTimeout(dragTimeout);
+
+        el.style.transform = "rotate(0deg)";
+        setTimeout(() => el.isDragging = false, 50);
+
+        const container = document.getElementById("container");
+        const rect = container.getBoundingClientRect();
+
+        let snappedLeft = Math.round(el.offsetLeft / GRID_SIZE) * GRID_SIZE;
+        let snappedTop = Math.round(el.offsetTop / GRID_SIZE) * GRID_SIZE;
+
+        snappedLeft = Math.max(0, Math.min(snappedLeft, rect.width - el.offsetWidth));
+        snappedTop = Math.max(0, Math.min(snappedTop, rect.height - el.offsetHeight));
+
+        el.style.left = snappedLeft + "px";
+        el.style.top = snappedTop + "px";
+    });
+
+    document.addEventListener("mousemove", function(e) {
+        if (!isDown || lockPositions) return;
+        if (!el.isDragging) return;
+
+        const container = document.getElementById("container");
+        const rect = container.getBoundingClientRect();
+
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+
+        const boxWidth = el.offsetWidth;
+        const boxHeight = el.offsetHeight;
+
+        newLeft = Math.max(0, Math.min(newLeft, rect.width - boxWidth));
+        newTop = Math.max(0, Math.min(newTop, rect.height - boxHeight));
+
+        el.style.left = newLeft + "px";
+        el.style.top = newTop + "px";
+    });
+}
+</script>
+
+</body>
+</html>
