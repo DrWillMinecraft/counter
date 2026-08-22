@@ -43,65 +43,17 @@
             cursor: pointer;
             user-select: none;
             color: black;
-
-            /* ⭐ Border stays above everything */
             z-index: 20;
-        }
 
-        .box.locked {
-            cursor: default;
-        }
-
-        .boxTop {
-            height: 65%;
-            display: flex;
-            flex-direction: row;
-            position: relative;
-            z-index: 10; /* under border */
-        }
-
-        /* Middle dividing line */
-        .boxTop::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: 5%;
-            height: 90%;
-            width: 3px;
-            background: #ccc;
-            z-index: 10;
-        }
-
-        .leftHalf, .rightHalf {
-            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 32px;
             font-weight: bold;
-            opacity: 0.9;
         }
 
-        .leftHalf:hover {
-            background: rgba(0,255,0,0.15);
-        }
-
-        .rightHalf:hover {
-            background: rgba(255,0,0,0.15);
-        }
-
-        .boxBottom {
-            height: 35%;
-            background: #e0e0e0;
-            border-top: 3px solid #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 20px;
-
-            /* ⭐ Bottom section sits UNDER the border */
-            z-index: 5;
+        .box.locked {
+            cursor: default;
         }
 
         .colorTag {
@@ -132,6 +84,12 @@
         .deleteItem:hover {
             transform: scale(1.25);
         }
+
+        #modeIndicator {
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -145,7 +103,9 @@
     <div id="deleteMenu"></div>
 
     <button onclick="resetPoints()">Reset All Points</button>
-    <button onclick="toggleLock()">Lock / Unlock Positions</button>
+
+    <button onclick="toggleMode()">Toggle Mode</button>
+    <div id="modeIndicator">Mode: POINT</div>
 
     <div id="container"></div>
 </div>
@@ -158,7 +118,7 @@
 <script>
 let boxes = [];
 let usedColors = [];
-let lockPositions = false;
+let mode = "POINT"; // ⭐ NEW: point mode vs drag mode
 const GRID_SIZE = 20;
 const MIN_HUE_DISTANCE = 40;
 
@@ -183,6 +143,11 @@ function randomColor() {
     return `hsl(${hue}, 90%, 50%)`;
 }
 
+function toggleMode() {
+    mode = mode === "POINT" ? "DRAG" : "POINT";
+    document.getElementById("modeIndicator").innerText = "Mode: " + mode;
+}
+
 function addPerson() {
     const container = document.getElementById("container");
     const index = boxes.length;
@@ -197,28 +162,17 @@ function addPerson() {
     box.style.left = safeX + "px";
     box.style.top = "20px";
 
-    box.innerHTML = `
-        <div class="boxTop">
-            <div class="leftHalf">+</div>
-            <div class="rightHalf">-</div>
-        </div>
-        <div class="boxBottom" id="points${index}">Points: 0</div>
-    `;
+    box.innerText = "0";
 
     makeDraggable(box);
     container.appendChild(box);
 
     boxes.push({ element: box, points: 0, color });
 
-    /* CLICK LOGIC */
+    /* LEFT CLICK = add point (only in POINT mode) */
     box.addEventListener("click", (e) => {
-        if (box.isDragging) return;
-
-        if (e.target.classList.contains("leftHalf")) {
-            changePoints(index, 1);
-        } else if (e.target.classList.contains("rightHalf")) {
-            changePoints(index, -1);
-        }
+        if (mode !== "POINT") return;
+        changePoints(index, 1);
     });
 
     updateDeleteMenu();
@@ -242,11 +196,6 @@ function updateDeleteMenu() {
 function deletePerson(index) {
     boxes[index].element.remove();
     boxes.splice(index, 1);
-
-    boxes.forEach((box, i) => {
-        box.element.querySelector(".boxBottom").id = `points${i}`;
-    });
-
     updateDeleteMenu();
     updateScoreboard();
 }
@@ -254,14 +203,14 @@ function deletePerson(index) {
 /* POINTS */
 function changePoints(index, amount) {
     boxes[index].points += amount;
-    document.getElementById("points" + index).innerText = "Points: " + boxes[index].points;
+    boxes[index].element.innerText = boxes[index].points;
     updateScoreboard();
 }
 
 function resetPoints() {
     boxes.forEach((box, i) => {
         box.points = 0;
-        document.getElementById("points" + i).innerText = "Points: 0";
+        box.element.innerText = "0";
     });
     updateScoreboard();
 }
@@ -281,65 +230,23 @@ function updateScoreboard() {
     });
 }
 
-/* LOCK */
-function toggleLock() {
-    lockPositions = !lockPositions;
-
-    boxes.forEach(b => {
-        if (lockPositions) b.element.classList.add("locked");
-        else b.element.classList.remove("locked");
-    });
-
-    alert(lockPositions ? "Positions locked" : "Positions unlocked");
-}
-
-/* HOLD 0.5 SECOND TO DRAG + TILT */
+/* DRAG MODE */
 function makeDraggable(el) {
     let offsetX, offsetY;
-    let isDown = false;
-    let dragTimeout = null;
-
-    el.isDragging = false;
 
     el.addEventListener("mousedown", function(e) {
-        if (lockPositions) return;
-
-        isDown = true;
-        el.isDragging = false;
+        if (mode !== "DRAG") return;
 
         offsetX = e.clientX - el.offsetLeft;
         offsetY = e.clientY - el.offsetTop;
 
-        dragTimeout = setTimeout(() => {
-            el.isDragging = true;
-            el.style.transform = "rotate(4deg)";
-        }, 500);
+        el.isDragging = true;
+
+        document.addEventListener("mousemove", move);
+        document.addEventListener("mouseup", stop);
     });
 
-    document.addEventListener("mouseup", function() {
-        if (!isDown) return;
-
-        isDown = false;
-        clearTimeout(dragTimeout);
-
-        el.style.transform = "rotate(0deg)";
-        setTimeout(() => el.isDragging = false, 50);
-
-        const container = document.getElementById("container");
-        const rect = container.getBoundingClientRect();
-
-        let snappedLeft = Math.round(el.offsetLeft / GRID_SIZE) * GRID_SIZE;
-        let snappedTop = Math.round(el.offsetTop / GRID_SIZE) * GRID_SIZE;
-
-        snappedLeft = Math.max(0, Math.min(snappedLeft, rect.width - el.offsetWidth));
-        snappedTop = Math.max(0, Math.min(snappedTop, rect.height - el.offsetHeight));
-
-        el.style.left = snappedLeft + "px";
-        el.style.top = snappedTop + "px";
-    });
-
-    document.addEventListener("mousemove", function(e) {
-        if (!isDown || lockPositions) return;
+    function move(e) {
         if (!el.isDragging) return;
 
         const container = document.getElementById("container");
@@ -356,7 +263,15 @@ function makeDraggable(el) {
 
         el.style.left = newLeft + "px";
         el.style.top = newTop + "px";
-    });
+        el.style.transform = "rotate(4deg)";
+    }
+
+    function stop() {
+        el.isDragging = false;
+        el.style.transform = "rotate(0deg)";
+        document.removeEventListener("mousemove", move);
+        document.removeEventListener("mouseup", stop);
+    }
 }
 </script>
 
