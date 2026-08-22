@@ -302,4 +302,42 @@ function makeDraggable(el) {
         clearTimeout(dragTimeout);
 
         el.style.transform = "rotate(0deg)";
-        setTimeout(() => el.isDragging =
+        setTimeout(() => el.isDragging = false, 50);
+
+        const container = document.getElementById("container");
+        const rect = container.getBoundingClientRect();
+
+        let snappedLeft = Math.round(el.offsetLeft / GRID_SIZE) * GRID_SIZE;
+        let snappedTop = Math.round(el.offsetTop / GRID_SIZE) * GRID_SIZE;
+
+        snappedLeft = Math.max(0, Math.min(snappedLeft, rect.width - el.offsetWidth));
+        snappedTop = Math.max(0, Math.min(snappedTop, rect.height - el.offsetHeight));
+
+        el.style.left = snappedLeft + "px";
+        el.style.top = snappedTop + "px";
+    });
+
+    document.addEventListener("mousemove", function(e) {
+        if (!isDown || lockPositions) return;
+        if (!el.isDragging) return;
+
+        const container = document.getElementById("container");
+        const rect = container.getBoundingClientRect();
+
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+
+        const boxWidth = el.offsetWidth;
+        const boxHeight = el.offsetHeight;
+
+        newLeft = Math.max(0, Math.min(newLeft, rect.width - boxWidth));
+        newTop = Math.max(0, Math.min(newTop, rect.height - boxHeight));
+
+        el.style.left = newLeft + "px";
+        el.style.top = newTop + "px";
+    });
+}
+</script>
+
+</body>
+</html>
