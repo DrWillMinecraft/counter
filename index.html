@@ -37,7 +37,7 @@
             border: 4px solid black;
             border-radius: 10px;
             box-shadow: 0 0 15px currentColor;
-            transition: transform 0.15s, width 0.2s, height 0.2s;
+            transition: transform 0.15s, width 0.15s, height 0.15s, font-size 0.15s;
             cursor: pointer;
             user-select: none;
             color: black;
@@ -48,11 +48,6 @@
             justify-content: center;
             font-weight: bold;
         }
-
-        /* Default size (medium) */
-        .size-small { width: 120px; height: 100px; font-size: 26px; }
-        .size-medium { width: 180px; height: 150px; font-size: 32px; }
-        .size-large { width: 240px; height: 200px; font-size: 40px; }
 
         .colorTag {
             display: inline-block;
@@ -89,15 +84,8 @@
             font-size: 18px;
         }
 
-        #sizeBar {
-            margin-top: 10px;
-            display: flex;
-            gap: 10px;
-        }
-
-        #sizeBar button {
-            padding: 8px 14px;
-            font-size: 16px;
+        #sizeSlider {
+            width: 200px;
         }
     </style>
 </head>
@@ -106,10 +94,11 @@
 <div id="leftSide">
     <h1>Points Tool</h1>
 
-    <div id="sizeBar">
-        <button onclick="setSize('small')">Small</button>
-        <button onclick="setSize('medium')">Medium</button>
-        <button onclick="setSize('large')">Large</button>
+    <button onclick="addPerson()">Add Person</button>
+
+    <div style="margin-top:10px;">
+        <label><b>Box Size:</b></label><br>
+        <input id="sizeSlider" type="range" min="1" max="100" value="50" oninput="updateSize()">
     </div>
 
     <button onclick="toggleMode()">Toggle Mode</button>
@@ -132,7 +121,7 @@
 let boxes = [];
 let usedColors = [];
 let mode = "POINT";
-let currentSize = "medium";
+let sizeValue = 50; // slider value
 
 const GRID_SIZE = 20;
 const MIN_HUE_DISTANCE = 40;
@@ -163,13 +152,22 @@ function toggleMode() {
     document.getElementById("modeIndicator").innerText = "Mode: " + mode;
 }
 
-/* ⭐ UNIVERSAL SIZE CHANGE */
-function setSize(size) {
-    currentSize = size;
+/* ⭐ UNIVERSAL SIZE SLIDER */
+function updateSize() {
+    sizeValue = document.getElementById("sizeSlider").value;
+
+    const minW = 100, maxW = 260;
+    const minH = 80, maxH = 220;
+    const minFont = 22, maxFont = 40;
+
+    const width = minW + (maxW - minW) * (sizeValue / 100);
+    const height = minH + (maxH - minH) * (sizeValue / 100);
+    const fontSize = minFont + (maxFont - minFont) * (sizeValue / 100);
 
     boxes.forEach(b => {
-        b.element.classList.remove("size-small", "size-medium", "size-large");
-        b.element.classList.add("size-" + size);
+        b.element.style.width = width + "px";
+        b.element.style.height = height + "px";
+        b.element.style.fontSize = fontSize + "px";
     });
 }
 
@@ -186,10 +184,165 @@ function createDefaultGrid() {
         for (let col = 0; col < 3; col++) {
 
             const box = document.createElement("div");
-            box.className = "box size-" + currentSize;
+            box.className = "box";
 
             const color = randomColor();
             box.style.borderColor = color;
 
             box.style.left = (col * spacingX + 40) + "px";
-            box.style.top = (row * spacingY
+            box.style.top = (row * spacingY + 40) + "px";
+
+            box.innerText = "0";
+
+            makeDraggable(box);
+            container.appendChild(box);
+
+            boxes.push({ element: box, points: 0, color });
+
+            /* LEFT CLICK = add point */
+            box.addEventListener("click", (e) => {
+                if (mode !== "POINT") return;
+                changePoints(index, 1);
+            });
+
+            index++;
+        }
+    }
+
+    updateSize();
+    updateDeleteMenu();
+    updateScoreboard();
+}
+
+/* ADD PERSON BUTTON */
+function addPerson() {
+    const container = document.getElementById("container");
+    const index = boxes.length;
+
+    const box = document.createElement("div");
+    box.className = "box";
+
+    const color = randomColor();
+    box.style.borderColor = color;
+
+    box.style.left = (20 + index * 40) + "px";
+    box.style.top = "20px";
+
+    box.innerText = "0";
+
+    makeDraggable(box);
+    container.appendChild(box);
+
+    boxes.push({ element: box, points: 0, color });
+
+    box.addEventListener("click", () => {
+        if (mode !== "POINT") return;
+        changePoints(index, 1);
+    });
+
+    updateSize();
+    updateDeleteMenu();
+    updateScoreboard();
+}
+
+/* DELETE MENU */
+function updateDeleteMenu() {
+    const menu = document.getElementById("deleteMenu");
+    menu.innerHTML = "";
+
+    boxes.forEach((box, i) => {
+        const item = document.createElement("div");
+        item.className = "deleteItem";
+        item.style.background = box.color;
+        item.onclick = () => deletePerson(i);
+        menu.appendChild(item);
+    });
+}
+
+function deletePerson(index) {
+    boxes[index].element.remove();
+    boxes.splice(index, 1);
+    updateDeleteMenu();
+    updateScoreboard();
+}
+
+/* POINTS */
+function changePoints(index, amount) {
+    boxes[index].points += amount;
+    boxes[index].element.innerText = boxes[index].points;
+    updateScoreboard();
+}
+
+function resetPoints() {
+    boxes.forEach((box, i) => {
+        box.points = 0;
+        box.element.innerText = "0";
+    });
+    updateScoreboard();
+}
+
+/* SCOREBOARD */
+function updateScoreboard() {
+    const scoreList = document.getElementById("scoreList");
+    scoreList.innerHTML = "";
+
+    boxes.forEach((box, i) => {
+        scoreList.innerHTML += `
+            <div style="margin-bottom:10px; font-size:18px;">
+                <span class="colorTag" style="background:${box.color};"></span>
+                ${box.points} points
+            </div>
+        `;
+    });
+}
+
+/* DRAG MODE */
+function makeDraggable(el) {
+    let offsetX, offsetY;
+
+    el.addEventListener("mousedown", function(e) {
+        if (mode !== "DRAG") return;
+
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+
+        el.isDragging = true;
+
+        document.addEventListener("mousemove", move);
+        document.addEventListener("mouseup", stop);
+    });
+
+    function move(e) {
+        if (!el.isDragging) return;
+
+        const container = document.getElementById("container");
+        const rect = container.getBoundingClientRect();
+
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+
+        const boxWidth = el.offsetWidth;
+        const boxHeight = el.offsetHeight;
+
+        newLeft = Math.max(0, Math.min(newLeft, rect.width - boxWidth));
+        newTop = Math.max(0, Math.min(newTop, rect.height - boxHeight));
+
+        el.style.left = newLeft + "px";
+        el.style.top = newTop + "px";
+        el.style.transform = "rotate(4deg)";
+    }
+
+    function stop() {
+        el.isDragging = false;
+        el.style.transform = "rotate(0deg)";
+        document.removeEventListener("mousemove", move);
+        document.removeEventListener("mouseup", stop);
+    }
+}
+
+/* ⭐ INIT */
+createDefaultGrid();
+</script>
+
+</body>
+</html>
