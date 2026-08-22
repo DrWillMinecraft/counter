@@ -36,10 +36,8 @@
             background: #f0f0f0;
             border: 4px solid black;
             border-radius: 10px;
-            width: 180px;
-            height: 150px;
             box-shadow: 0 0 15px currentColor;
-            transition: transform 0.15s;
+            transition: transform 0.15s, width 0.2s, height 0.2s;
             cursor: pointer;
             user-select: none;
             color: black;
@@ -48,13 +46,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
             font-weight: bold;
         }
 
-        .box.locked {
-            cursor: default;
-        }
+        /* Default size (medium) */
+        .size-small { width: 120px; height: 100px; font-size: 26px; }
+        .size-medium { width: 180px; height: 150px; font-size: 32px; }
+        .size-large { width: 240px; height: 200px; font-size: 40px; }
 
         .colorTag {
             display: inline-block;
@@ -90,6 +88,17 @@
             margin-top: 10px;
             font-size: 18px;
         }
+
+        #sizeBar {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #sizeBar button {
+            padding: 8px 14px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -97,15 +106,19 @@
 <div id="leftSide">
     <h1>Points Tool</h1>
 
-    <button onclick="addPerson()">Add Person</button>
+    <div id="sizeBar">
+        <button onclick="setSize('small')">Small</button>
+        <button onclick="setSize('medium')">Medium</button>
+        <button onclick="setSize('large')">Large</button>
+    </div>
+
+    <button onclick="toggleMode()">Toggle Mode</button>
+    <div id="modeIndicator">Mode: POINT</div>
 
     <h3>Delete by Color:</h3>
     <div id="deleteMenu"></div>
 
     <button onclick="resetPoints()">Reset All Points</button>
-
-    <button onclick="toggleMode()">Toggle Mode</button>
-    <div id="modeIndicator">Mode: POINT</div>
 
     <div id="container"></div>
 </div>
@@ -118,7 +131,9 @@
 <script>
 let boxes = [];
 let usedColors = [];
-let mode = "POINT"; // ⭐ NEW: point mode vs drag mode
+let mode = "POINT";
+let currentSize = "medium";
+
 const GRID_SIZE = 20;
 const MIN_HUE_DISTANCE = 40;
 
@@ -148,132 +163,33 @@ function toggleMode() {
     document.getElementById("modeIndicator").innerText = "Mode: " + mode;
 }
 
-function addPerson() {
+/* ⭐ UNIVERSAL SIZE CHANGE */
+function setSize(size) {
+    currentSize = size;
+
+    boxes.forEach(b => {
+        b.element.classList.remove("size-small", "size-medium", "size-large");
+        b.element.classList.add("size-" + size);
+    });
+}
+
+/* ⭐ CREATE 9 BOXES IN 3×3 GRID */
+function createDefaultGrid() {
     const container = document.getElementById("container");
-    const index = boxes.length;
 
-    const box = document.createElement("div");
-    box.className = "box";
+    const spacingX = 220;
+    const spacingY = 180;
 
-    const color = randomColor();
-    box.style.borderColor = color;
+    let index = 0;
 
-    const safeX = Math.min(20 + index * 200, container.clientWidth - 200);
-    box.style.left = safeX + "px";
-    box.style.top = "20px";
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
 
-    box.innerText = "0";
+            const box = document.createElement("div");
+            box.className = "box size-" + currentSize;
 
-    makeDraggable(box);
-    container.appendChild(box);
+            const color = randomColor();
+            box.style.borderColor = color;
 
-    boxes.push({ element: box, points: 0, color });
-
-    /* LEFT CLICK = add point (only in POINT mode) */
-    box.addEventListener("click", (e) => {
-        if (mode !== "POINT") return;
-        changePoints(index, 1);
-    });
-
-    updateDeleteMenu();
-    updateScoreboard();
-}
-
-/* DELETE MENU */
-function updateDeleteMenu() {
-    const menu = document.getElementById("deleteMenu");
-    menu.innerHTML = "";
-
-    boxes.forEach((box, i) => {
-        const item = document.createElement("div");
-        item.className = "deleteItem";
-        item.style.background = box.color;
-        item.onclick = () => deletePerson(i);
-        menu.appendChild(item);
-    });
-}
-
-function deletePerson(index) {
-    boxes[index].element.remove();
-    boxes.splice(index, 1);
-    updateDeleteMenu();
-    updateScoreboard();
-}
-
-/* POINTS */
-function changePoints(index, amount) {
-    boxes[index].points += amount;
-    boxes[index].element.innerText = boxes[index].points;
-    updateScoreboard();
-}
-
-function resetPoints() {
-    boxes.forEach((box, i) => {
-        box.points = 0;
-        box.element.innerText = "0";
-    });
-    updateScoreboard();
-}
-
-/* SCOREBOARD */
-function updateScoreboard() {
-    const scoreList = document.getElementById("scoreList");
-    scoreList.innerHTML = "";
-
-    boxes.forEach((box, i) => {
-        scoreList.innerHTML += `
-            <div style="margin-bottom:10px; font-size:18px;">
-                <span class="colorTag" style="background:${box.color};"></span>
-                ${box.points} points
-            </div>
-        `;
-    });
-}
-
-/* DRAG MODE */
-function makeDraggable(el) {
-    let offsetX, offsetY;
-
-    el.addEventListener("mousedown", function(e) {
-        if (mode !== "DRAG") return;
-
-        offsetX = e.clientX - el.offsetLeft;
-        offsetY = e.clientY - el.offsetTop;
-
-        el.isDragging = true;
-
-        document.addEventListener("mousemove", move);
-        document.addEventListener("mouseup", stop);
-    });
-
-    function move(e) {
-        if (!el.isDragging) return;
-
-        const container = document.getElementById("container");
-        const rect = container.getBoundingClientRect();
-
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
-
-        const boxWidth = el.offsetWidth;
-        const boxHeight = el.offsetHeight;
-
-        newLeft = Math.max(0, Math.min(newLeft, rect.width - boxWidth));
-        newTop = Math.max(0, Math.min(newTop, rect.height - boxHeight));
-
-        el.style.left = newLeft + "px";
-        el.style.top = newTop + "px";
-        el.style.transform = "rotate(4deg)";
-    }
-
-    function stop() {
-        el.isDragging = false;
-        el.style.transform = "rotate(0deg)";
-        document.removeEventListener("mousemove", move);
-        document.removeEventListener("mouseup", stop);
-    }
-}
-</script>
-
-</body>
-</html>
+            box.style.left = (col * spacingX + 40) + "px";
+            box.style.top = (row * spacingY
