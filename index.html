@@ -123,7 +123,6 @@ let usedColors = [];
 let mode = "POINT";
 let sizeValue = 50;
 
-const GRID_SIZE = 20;
 const MIN_HUE_DISTANCE = 40;
 
 /* Distinct HSL colors */
@@ -339,9 +338,11 @@ function makeDraggable(el) {
     }
 }
 
-/* ⭐ INIT — FAST LOAD */
-requestAnimationFrame(() => {
-    createDefaultGrid();
+/* ⭐ INIT — TRUE FAST LOAD */
+window.addEventListener("load", () => {
+    requestAnimationFrame(() => {
+        createDefaultGrid();
+    });
 });
 </script>
 
