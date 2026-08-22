@@ -84,26 +84,9 @@
         .deleteItem:hover {
             transform: scale(1.2);
         }
-
-        /* Copilot logo */
-        #copilotLogo {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            opacity: 0.85;
-            transition: 0.2s;
-        }
-
-        #copilotLogo:hover {
-            opacity: 1;
-            transform: scale(1.1);
-        }
     </style>
 </head>
 <body>
-
-<img id="copilotLogo" src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Microsoft_Copilot_Icon.svg">
 
 <div id="leftSide">
     <h1>Points Tool</h1>
@@ -223,47 +206,4 @@ function changePoints(index, amount) {
     updateScoreboard();
 }
 
-function resetPoints() {
-    boxes.forEach((box, i) => {
-        box.points = 0;
-        document.getElementById("points" + i).innerText = "Points: 0";
-    });
-    updateScoreboard();
-}
-
-function updateScoreboard() {
-    const scoreList = document.getElementById("scoreList");
-    scoreList.innerHTML = "";
-
-    boxes.forEach((box, i) => {
-        scoreList.innerHTML += `
-            <div>
-                <span class="colorTag" style="background:${box.color};"></span>
-                ${box.points} points
-            </div>
-        `;
-    });
-}
-
-function toggleLock() {
-    lockPositions = !lockPositions;
-
-    boxes.forEach(b => {
-        if (lockPositions) {
-            b.element.classList.add("locked");
-        } else {
-            b.element.classList.remove("locked");
-        }
-    });
-
-    alert(lockPositions ? "Positions locked" : "Positions unlocked");
-}
-
-function makeDraggable(el) {
-    let offsetX, offsetY, isDown = false;
-
-    el.addEventListener("mousedown", function(e) {
-        if (lockPositions) return;
-        isDown = true;
-        offsetX = e.clientX - el.offsetLeft;
-        offset
+function resetPoints
