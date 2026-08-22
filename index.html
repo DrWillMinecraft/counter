@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Points Tool</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        #leftSide {
+            flex: 1;
+        }
+
+        #scoreboard {
+            width: 250px;
+            border-left: 3px solid #ccc;
+            padding-left: 20px;
+        }
+
+        #container {
+            position: relative;
+            width: 100%;
+            height: 75vh;
+            border: 2px solid #ccc;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .box {
+            position: absolute;
+            background: #f0f0f0;
+            border: 4px solid black;
+            padding: 10px;
+            resize: both;
+            overflow: auto;
+            cursor: move;
+            border-radius: 8px;
+            width: 150px;
+            height: 100px;
+        }
+
+        .box.locked {
+            resize: none;
+            cursor: default;
+        }
+
+        button, select {
+            padding: 5px 10px;
+            margin: 5px;
+        }
+
+        .colorTag {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 6px;
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="leftSide">
+    <h1>Points Tool</h1>
+
+    <button onclick="addPerson()">Add Person</button>
+
+    <select id="deleteSelect"></select>
+    <button onclick="deleteSelected()">Delete Selected</button>
+
+    <button onclick="resetPoints()">Reset All Points</button>
+    <button onclick="toggleLock()">Lock / Unlock Positions</button>
+
+    <div id="container"></div>
+</div>
+
+<div id="scoreboard">
+    <h2>Scoreboard</h2>
+    <div id="scoreList"></div>
+</div>
+
+<script>
+let boxes = [];
+let lockPositions = false;
+const GRID_SIZE = 20;
+
+function randomColor() {
+    const r = Math.floor(Math.random()*200);
+    const g = Math.floor(Math.random()*200);
+    const b = Math.floor(Math.random()*200);
+    return `rgb(${r},${g},${b})`;
+}
+
+function addPerson() {
+    const container = document.getElementById("container");
+
+    const index = boxes.length;
+    const box = document.createElement("div");
+    box.className = "box";
+
+    // Assign random border color
+    const color = randomColor();
+    box.style.borderColor = color;
+
+    // Spawn inside container safely
+    const containerWidth = container.clientWidth;
+    const safeX = Math.min(20 + index * 160, containerWidth - 160);
+
+    box.style.left = safeX + "px";
+    box.style.top = "20px";
+
+    box.innerHTML = `
+        <div>
+            <button onclick="changePoints(${index}, 1)">+</button>
+            <button onclick="changePoints(${index}, -1)">-</button>
+            <div id="points${index}">Points: 0</div>
+        </div>
+    `;
+
+    makeDraggable(box);
+    container.appendChild(box);
+
+    boxes.push({ element: box, points: 0, color });
+
+    updateDeleteList();
+    updateScoreboard();
+}
+
+function updateDeleteList() {
+    const select = document.getElementById("deleteSelect");
+    select.innerHTML = "";
+
+    boxes.forEach((box, i) => {
+        const option = document.createElement("option");
+        option.value = i;
+        option.innerHTML = `
+            Person ${i+1}
+        `;
+        option.style.color = box.color;
+        option.style.fontWeight = "bold";
+        select.appendChild(option);
+    });
+}
+
+function deleteSelected() {
+    const select = document.getElementById("deleteSelect");
+    const index = Number(select.value);
+
+    if (isNaN(index)) return;
+
+    boxes[index].element.remove();
+    boxes.splice(index, 1);
+
+    // Re-label remaining boxes
+    boxes.forEach((box, i) => {
+        box.element.querySelector("button:nth-child(1)").setAttribute("onclick", `changePoints(${i}, 1)`);
+        box.element.querySelector("button:nth-child(2)").setAttribute("onclick", `changePoints(${i}, -1)`);
+        box.element.querySelector("div").id = `points${i}`;
+    });
+
+    updateDeleteList();
+    updateScoreboard();
+}
+
+function changePoints(index, amount) {
+    boxes[index].points += amount;
+    document.getElementById("points" + index).innerText = "Points: " + boxes[index].points;
+    updateScoreboard();
+}
+
+function resetPoints() {
+    boxes.forEach((box, i) => {
+        box.points = 0;
+        document.getElementById("points" + i).innerText = "Points: 0";
+    });
+    updateScoreboard();
+}
+
+function updateScoreboard() {
+    const scoreList = document.getElementById("scoreList");
+    scoreList.innerHTML = "";
+
+    boxes.forEach((box, i) => {
+        scoreList.innerHTML += `
+            <div>
+                <span class="colorTag" style="background:${box.color};"></span>
+                ${box.points} points
+            </div>
+        `;
+    });
+}
+
+function toggleLock() {
+    lockPositions = !lockPositions;
+
+    boxes.forEach(b => {
+        if (lockPositions) {
+            b.element.classList.add("locked");
+        } else {
+            b.element.classList.remove("locked");
+        }
+    });
+
+    alert(lockPositions ? "Positions locked" : "Positions unlocked");
+}
+
+function makeDraggable(el) {
+    let offsetX, offsetY, isDown = false;
+
+    el.addEventListener("mousedown", function(e) {
+        if (lockPositions) return;
+        isDown = true;
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+    });
+
+    document.addEventListener("mouseup", function() {
+        if (!isDown) return;
+        isDown = false;
+
+        const container = document.getElementById("container");
+        const rect = container.getBoundingClientRect();
+
+        let snappedLeft = Math.round(el.offsetLeft / GRID_SIZE) * GRID_SIZE;
+        let snappedTop = Math.round(el.offsetTop / GRID_SIZE) * GRID_SIZE;
+
+        snappedLeft = Math.max(0, Math.min(snappedLeft, rect.width - el.offsetWidth));
+        snappedTop = Math.max(0, Math.min(snappedTop, rect.height - el.offsetHeight));
+
+        el.style.left = snappedLeft + "px";
+        el.style.top = snappedTop + "px";
+    });
+
+    document.addEventListener("mousemove", function(e) {
+        if (!isDown || lockPositions) return;
+
+        const container = document.getElementById("container");
+        const rect = container.getBoundingClientRect();
+
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+
+        const boxWidth = el.offsetWidth;
+        const boxHeight = el.offsetHeight;
+
+        newLeft = Math.max(0, Math.min(newLeft, rect.width - boxWidth));
+        newTop = Math.max(0, Math.min(newTop, rect.height - boxHeight));
+
+        el.style.left = newLeft + "px";
+        el.style.top = newTop + "px";
+    });
+}
+</script>
+
+</body>
+</html>
