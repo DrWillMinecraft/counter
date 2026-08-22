@@ -14,8 +14,8 @@
   #main{position:relative;width:100%;height:calc(100vh - 40px)}
   #corner{
     position:absolute;
-    width:120px;
-    height:120px;
+    width:200px;
+    height:200px;
     right:10px;
     bottom:10px;
     border:2px solid #888;
@@ -87,7 +87,7 @@
   let drag=null;
   let students=[];
   let hist=[];
-  const grid=80; // invisible grid spacing
+  const grid=80;
 
   function col(){
     return "hsl("+Math.floor(Math.random()*360)+",70%,60%)";
@@ -141,13 +141,11 @@
       ox:e.clientX-r.left,
       oy:e.clientY-r.top
     };
+
     if(!main.contains(el)){
-      const x=r.left-m.left;
-      const y=r.top-m.top;
-      el.style.left=x+"px";
-      el.style.top=y+"px";
-      main.appendChild(el);
+      main.appendChild(el);  // FIXED: no repositioning
     }
+
     window.addEventListener("mousemove",move);
     window.addEventListener("mouseup",end);
   }
