@@ -36,11 +36,10 @@
             margin-bottom: 20px;
         }
 
-        /* STRICT 10×10 GRID */
+        /* STRICT 10×10 GRID THAT ALWAYS FITS SCREEN */
         #gridContainer {
-            width: 90vw;
-            max-width: 90vh;
-            aspect-ratio: 1 / 1;
+            width: min(90vw, 90vh);
+            height: min(90vw, 90vh);
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             grid-template-rows: repeat(10, 1fr);
@@ -491,3 +490,4 @@ function startLoadingSequence() {
 
 </body>
 </html>
+
