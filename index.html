@@ -38,11 +38,12 @@
             padding: 10px;
             resize: both;
             overflow: auto;
-            cursor: move;
+            cursor: pointer;
             border-radius: 8px;
             width: 150px;
             height: 100px;
             box-shadow: 0 0 15px currentColor;
+            transition: transform 0.15s;
         }
 
         .box.locked {
@@ -166,6 +167,13 @@ function addPerson() {
 
     boxes.push({ element: box, points: 0, color });
 
+    // CLICK ANYWHERE TO ADD POINT
+    box.addEventListener("click", (e) => {
+        if (e.target.tagName === "BUTTON") return;
+        if (box.isDragging) return;
+        changePoints(index, 1);
+    });
+
     updateDeleteMenu();
     updateScoreboard();
 }
@@ -206,4 +214,22 @@ function changePoints(index, amount) {
     updateScoreboard();
 }
 
-function resetPoints
+function resetPoints() {
+    boxes.forEach((box, i) => {
+        box.points = 0;
+        document.getElementById("points" + i).innerText = "Points: 0";
+    });
+    updateScoreboard();
+}
+
+/* SCOREBOARD WITH + AND - BUTTONS */
+function updateScoreboard() {
+    const scoreList = document.getElementById("scoreList");
+    scoreList.innerHTML = "";
+
+    boxes.forEach((box, i) => {
+        scoreList.innerHTML += `
+            <div style="margin-bottom:10px;">
+                <span class="colorTag" style="background:${box.color};"></span>
+                <button onclick="changePoints(${i}, 1)">+</button>
+                <button onclick="changePoints(${i}, -1)">-</button>
