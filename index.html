@@ -36,6 +36,7 @@
             margin-bottom: 20px;
         }
 
+        /* STRICT 10×10 GRID */
         #gridContainer {
             width: 90vw;
             max-width: 90vh;
@@ -106,6 +107,7 @@
         /* MAIN APP */
         #leftSide {
             padding: 20px;
+            display: none;
         }
 
         #container {
@@ -185,7 +187,7 @@
 </div>
 
 <!-- MAIN APP -->
-<div id="leftSide" style="display:none;">
+<div id="leftSide">
     <h1>Points Tool</h1>
 
     <button onclick="addPerson()">Add Person</button>
@@ -218,7 +220,7 @@ let selectedCol = null;
 const MIN_HUE_DISTANCE = 40;
 const TOTAL_STEPS = 15;
 
-/* BUILD GRID */
+/* BUILD STRICT 10×10 GRID */
 const gridContainer = document.getElementById("gridContainer");
 
 for (let r = 0; r < 10; r++) {
