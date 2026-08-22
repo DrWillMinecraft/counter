@@ -21,7 +21,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 30px;
+            padding-top: 50px; /* SAFETY BUFFER */
+            padding-bottom: 50px; /* SAFETY BUFFER */
             z-index: 9999;
         }
 
@@ -36,14 +37,15 @@
             margin-bottom: 20px;
         }
 
-        /* STRICT 10×10 GRID THAT ALWAYS FITS SCREEN */
+        /* STRICT 5×5 GRID THAT ALWAYS FITS SCREEN + 50px BUFFER */
         #gridContainer {
-            width: min(90vw, 90vh);
-            height: min(90vw, 90vh);
+            width: calc(min(90vw, 90vh) - 50px);
+            height: calc(min(90vw, 90vh) - 50px);
             display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            gap: 2px;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 4px;
+            margin-top: 20px;
         }
 
         .gridSquare {
@@ -219,11 +221,11 @@ let selectedCol = null;
 const MIN_HUE_DISTANCE = 40;
 const TOTAL_STEPS = 15;
 
-/* BUILD STRICT 10×10 GRID */
+/* BUILD STRICT 5×5 GRID */
 const gridContainer = document.getElementById("gridContainer");
 
-for (let r = 0; r < 10; r++) {
-    for (let c = 0; c < 10; c++) {
+for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
         const sq = document.createElement("div");
         sq.className = "gridSquare";
         sq.dataset.row = r;
@@ -256,8 +258,8 @@ function selectSquare(r, c) {
 
 /* CONFIRM SIZE */
 function confirmSize() {
-    const maxIndex = selectedRow * 10 + selectedCol;
-    sizeValue = Math.floor((maxIndex / 99) * 100);
+    const maxIndex = selectedRow * 5 + selectedCol;
+    sizeValue = Math.floor((maxIndex / 24) * 100);
     document.getElementById("sizeSlider").value = sizeValue;
 
     document.getElementById("startScreen").style.display = "none";
@@ -490,4 +492,3 @@ function startLoadingSequence() {
 
 </body>
 </html>
-
