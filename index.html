@@ -34,7 +34,7 @@
         .box {
             position: absolute;
             background: #f0f0f0;
-            border: 4px solid black; /* top layer border */
+            border: 4px solid black;
             border-radius: 10px;
             width: 180px;
             height: 150px;
@@ -43,7 +43,9 @@
             cursor: pointer;
             user-select: none;
             color: black;
-            z-index: 10; /* ensures border stays on top */
+
+            /* ⭐ Border stays above everything */
+            z-index: 20;
         }
 
         .box.locked {
@@ -55,9 +57,10 @@
             display: flex;
             flex-direction: row;
             position: relative;
+            z-index: 10; /* under border */
         }
 
-        /* Middle dividing line — same color as bottom divider */
+        /* Middle dividing line */
         .boxTop::after {
             content: "";
             position: absolute;
@@ -66,7 +69,7 @@
             height: 90%;
             width: 3px;
             background: #ccc;
-            z-index: 11;
+            z-index: 10;
         }
 
         .leftHalf, .rightHalf {
@@ -90,13 +93,15 @@
         .boxBottom {
             height: 35%;
             background: #e0e0e0;
-            border-top: 3px solid #ccc; /* same color as middle line */
+            border-top: 3px solid #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             font-size: 20px;
-            z-index: 11;
+
+            /* ⭐ Bottom section sits UNDER the border */
+            z-index: 5;
         }
 
         .colorTag {
@@ -308,7 +313,7 @@ function makeDraggable(el) {
         dragTimeout = setTimeout(() => {
             el.isDragging = true;
             el.style.transform = "rotate(4deg)";
-        }, 500); /* 0.5 seconds */
+        }, 500);
     });
 
     document.addEventListener("mouseup", function() {
