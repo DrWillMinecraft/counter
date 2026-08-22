@@ -12,6 +12,35 @@
             gap: 20px;
         }
 
+        /* LIGHT LOADING SCREEN */
+        #loadingScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: white;
+            color: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 5px solid #ccc;
+            border-top-color: black;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         #leftSide {
             flex: 1;
         }
@@ -91,6 +120,12 @@
 </head>
 <body>
 
+<!-- LOADING SCREEN -->
+<div id="loadingScreen">
+    Loading... <span id="loadPercent">0%</span>
+    <div class="spinner"></div>
+</div>
+
 <div id="leftSide">
     <h1>Points Tool</h1>
 
@@ -125,6 +160,11 @@ let sizeValue = 50;
 
 const MIN_HUE_DISTANCE = 40;
 
+/* LOADING SCREEN UPDATE */
+function setProgress(p) {
+    document.getElementById("loadPercent").innerText = p + "%";
+}
+
 /* Distinct HSL colors */
 function randomColor() {
     let hue;
@@ -151,7 +191,7 @@ function toggleMode() {
     document.getElementById("modeIndicator").innerText = "Mode: " + mode;
 }
 
-/* ⭐ UNIVERSAL SIZE SLIDER */
+/* UNIVERSAL SIZE SLIDER */
 function updateSize() {
     sizeValue = document.getElementById("sizeSlider").value;
 
@@ -170,7 +210,7 @@ function updateSize() {
     });
 }
 
-/* ⭐ CREATE 9 BOXES IN 3×3 GRID */
+/* CREATE 9 BOXES IN 3×3 GRID */
 function createDefaultGrid() {
     const container = document.getElementById("container");
 
@@ -207,9 +247,7 @@ function createDefaultGrid() {
         }
     }
 
-    updateSize();
-    updateDeleteMenu();
-    updateScoreboard();
+    setProgress(33);
 }
 
 /* ADD PERSON BUTTON */
@@ -255,6 +293,8 @@ function updateDeleteMenu() {
         item.onclick = () => deletePerson(i);
         menu.appendChild(item);
     });
+
+    setProgress(66);
 }
 
 function deletePerson(index) {
@@ -292,6 +332,8 @@ function updateScoreboard() {
             </div>
         `;
     });
+
+    setProgress(100);
 }
 
 /* DRAG MODE */
@@ -338,10 +380,17 @@ function makeDraggable(el) {
     }
 }
 
-/* ⭐ INIT — TRUE FAST LOAD */
+/* INIT — REAL PROGRESS LOADING */
 window.addEventListener("load", () => {
+    setProgress(0);
+
     requestAnimationFrame(() => {
         createDefaultGrid();
+        updateSize();
+        updateDeleteMenu();
+        updateScoreboard();
+
+        document.getElementById("loadingScreen").style.display = "none";
     });
 });
 </script>
