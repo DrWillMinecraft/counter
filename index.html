@@ -13,7 +13,7 @@ body {
   user-select: none;
 }
 
-/* ⭐ TOP BAR */
+/* TOP BAR */
 #topbar {
   height: 60px;
   background: #333;
@@ -80,6 +80,8 @@ body {
   display: none;
   flex-direction: column;
   gap: 10px;
+  z-index: 9999;
+  pointer-events: auto;
 }
 
 /* Main area */
@@ -90,7 +92,7 @@ body {
   overflow: hidden;
 }
 
-/* ⭐ Spawn box (bottom-right) */
+/* Spawn box */
 #spawn {
   position: absolute;
   bottom: 10px;
@@ -106,7 +108,6 @@ body {
   transition: background 0.15s, border-color 0.15s;
 }
 
-/* ⭐ Spawn box highlight when deleting */
 #spawn.deleting {
   background: #333;
   border-color: #777;
@@ -138,7 +139,7 @@ body {
   margin-top: 5px;
 }
 
-/* Name input inside student box */
+/* Name input */
 .nameInput {
   position: absolute;
   top: 5px;
@@ -162,6 +163,11 @@ body {
   display: none;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
+}
+
+#popup[style*="display: flex"] {
+  pointer-events: auto;
 }
 
 #popupBox {
@@ -196,7 +202,7 @@ body {
 
 <body>
 
-<!-- ⭐ TOP BAR -->
+<!-- TOP BAR -->
 <div id="topbar">
 
   <!-- LEFT -->
@@ -270,9 +276,6 @@ body {
 
   function applySize(el){
     let s = parseInt(sizeSlider.value,10);
-    const maxSize = 180;
-    if(s > maxSize) s = maxSize;
-
     el.style.width = s + "px";
     el.style.height = s + "px";
 
@@ -567,6 +570,11 @@ body {
 
     spawn.innerHTML="";
     spawn.classList.remove("deleting");
+
+    const existingTemplate=document.querySelector(".tBox");
+    if(existingTemplate && m!=="drag"){
+      existingTemplate.remove();
+    }
 
     if(m==="drag"){
       toggle.style.background="#5566ff";
