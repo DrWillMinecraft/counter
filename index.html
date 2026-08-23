@@ -13,15 +13,31 @@ body {
   user-select: none;
 }
 
+/* ⭐ TOP BAR LAYOUT */
 #topbar {
   height: 60px;
   background: #333;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 15px;
-  gap: 10px;
 }
 
+/* LEFT: Size slider */
+#leftBar {
+  display: flex;
+  align-items: center;
+}
+#sizeSlider {
+  width: 160px;
+}
+
+/* CENTER: Mode toggle */
+#centerBar {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+}
 #toggle {
   padding: 10px 20px;
   background: #5566ff;
@@ -30,25 +46,26 @@ body {
   font-weight: bold;
 }
 
-#sizeSlider {
-  width: 150px;
+/* RIGHT: Reset + Settings */
+#rightBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
 #resetBtn {
   padding: 10px 20px;
   background: #aa3333;
   border-radius: 6px;
   cursor: pointer;
 }
-
 #settingsBtn {
-  margin-left: auto;
   padding: 10px 20px;
   background: #444;
   border-radius: 6px;
   cursor: pointer;
 }
 
+/* Settings menu */
 #settingsMenu {
   position: absolute;
   top: 60px;
@@ -61,6 +78,7 @@ body {
   gap: 10px;
 }
 
+/* Main area */
 #main {
   position: relative;
   width: 100vw;
@@ -68,10 +86,10 @@ body {
   overflow: hidden;
 }
 
-/* ⭐ Corner is purely decorative, inside main */
-#corner {
+/* ⭐ Spawn box (bottom-left) */
+#spawn {
   position: absolute;
-  top: 10px;
+  bottom: 10px;
   left: 10px;
   width: 220px;
   height: 220px;
@@ -83,6 +101,7 @@ body {
   justify-content: center;
 }
 
+/* Student + Template boxes */
 .sBox, .tBox {
   position: absolute;
   background: #111;
@@ -103,6 +122,7 @@ body {
   margin-top: 5px;
 }
 
+/* Name input */
 .nameInput {
   position: absolute;
   top: 5px;
@@ -114,6 +134,7 @@ body {
   font-size: 16px;
 }
 
+/* Popup */
 #popup {
   position: fixed;
   top: 0;
@@ -138,6 +159,7 @@ body {
   height: 120px;
 }
 
+/* Point mode buttons */
 .pointSplit {
   display: flex;
   flex-direction: column;
@@ -157,13 +179,28 @@ body {
 
 <body>
 
+<!-- ⭐ TOP BAR -->
 <div id="topbar">
-  <div id="toggle">DRAG</div>
-  <input id="sizeSlider" type="range" min="60" max="180" value="120">
-  <div id="resetBtn">RESET</div>
-  <div id="settingsBtn">⚙️</div>
+
+  <!-- LEFT -->
+  <div id="leftBar">
+    <input id="sizeSlider" type="range" min="60" max="180" value="120">
+  </div>
+
+  <!-- CENTER -->
+  <div id="centerBar">
+    <div id="toggle">DRAG</div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="rightBar">
+    <div id="resetBtn">RESET</div>
+    <div id="settingsBtn">⚙️</div>
+  </div>
+
 </div>
 
+<!-- SETTINGS MENU -->
 <div id="settingsMenu">
   <button id="setLightDark">Light/Dark</button>
   <button id="setSave">Save</button>
@@ -171,11 +208,12 @@ body {
   <button id="setExport">Export CSV</button>
 </div>
 
+<!-- MAIN AREA -->
 <div id="main">
-  <!-- ⭐ Decorative corner box; point-mode buttons live here -->
-  <div id="corner"></div>
+  <div id="spawn"></div>
 </div>
 
+<!-- POPUP -->
 <div id="popup">
   <div id="popupBox">
     <h3 id="popupTitle"></h3>
@@ -188,7 +226,7 @@ body {
 (function(){
 
   const main=document.getElementById("main");
-  const corner=document.getElementById("corner");
+  const spawn=document.getElementById("spawn");
   const toggle=document.getElementById("toggle");
   const sizeSlider=document.getElementById("sizeSlider");
   const resetBtn=document.getElementById("resetBtn");
@@ -272,7 +310,7 @@ body {
     return s;
   }
 
-  /* ⭐ Template spawns directly in MAIN */
+  /* ⭐ Template spawns centered inside spawn box */
   function makeTemplate(){
     const t=document.createElement("div");
     t.className="tBox";
@@ -281,16 +319,21 @@ body {
     t.innerHTML='<div class="student-name"></div><div class="student-score">0</div>';
 
     t.style.position="absolute";
-
     main.appendChild(t);
 
-    const mw = main.offsetWidth;
-    const mh = main.offsetHeight;
+    const sw = spawn.offsetWidth;
+    const sh = spawn.offsetHeight;
     const tw = t.offsetWidth;
     const th = t.offsetHeight;
 
-    t.style.left = (mw - tw) / 2 + "px";
-    t.style.top  = (mh - th) / 2 + "px";
+    const spawnRect = spawn.getBoundingClientRect();
+    const mainRect = main.getBoundingClientRect();
+
+    const left = (spawnRect.left - mainRect.left) + (sw - tw)/2;
+    const top  = (spawnRect.top  - mainRect.top) + (sh - th)/2;
+
+    t.style.left = left + "px";
+    t.style.top  = top  + "px";
 
     const start=e=>{
       if(mode!=="drag")return;
@@ -363,12 +406,40 @@ body {
     el.style.top=y+"px";
   }
 
+  /* ⭐ Check if dragged box is inside spawn box */
+  function isInsideSpawn(el){
+    const spawnRect = spawn.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+
+    const cx = elRect.left + elRect.width/2;
+    const cy = elRect.top + elRect.height/2;
+
+    return (
+      cx >= spawnRect.left &&
+      cx <= spawnRect.right &&
+      cy >= spawnRect.top &&
+      cy <= spawnRect.bottom
+    );
+  }
+
   function dragEnd(){
     if(drag && drag.el){
+
+      /* ⭐ Student dragged into spawn → delete */
+      if(drag.el.classList.contains("sBox")){
+        if(isInsideSpawn(drag.el)){
+          drag.el.remove();
+          students = students.filter(s => s !== drag.el);
+          drag=null;
+          return;
+        }
+      }
+
       snap(drag.el);
       clampToMain(drag.el);
       scaleTextWithBox(drag.el);
 
+      /* ⭐ Template dragged → create student */
       if(drag.el.classList.contains("tBox")){
         const tRect = drag.el.getBoundingClientRect();
         const mRect = main.getBoundingClientRect();
@@ -416,9 +487,8 @@ body {
     });
 
     function updateNameMode(){
-      if(mode === "names"){
+      if (mode === "names") {
         nameSpan.style.display = "none";
-        if(!s.contains(nameInput)) s.insertBefore(nameInput, nameSpan);
         nameInput.style.display = "block";
       } else {
         nameSpan.style.display = "block";
@@ -455,14 +525,14 @@ body {
 
     if(m==="drag"){
       toggle.style.background="#5566ff";
-      corner.innerHTML="";
+      spawn.innerHTML="";
       spawnTemplate();
     }
 
     if(m==="point"){
       toggle.style.background="#55aa55";
 
-      corner.innerHTML="";
+      spawn.innerHTML="";
       const wrap=document.createElement("div");
       wrap.className="pointSplit";
 
@@ -497,18 +567,18 @@ body {
 
       wrap.appendChild(plus);
       wrap.appendChild(undo);
-      corner.appendChild(wrap);
+      spawn.appendChild(wrap);
     }
 
     if(m==="names"){
       toggle.style.background="#aa5555";
 
-      corner.innerHTML="";
+      spawn.innerHTML="";
       const info=document.createElement("div");
       info.style.textAlign="center";
       info.style.fontSize="18px";
       info.textContent="Edit all names below.";
-      corner.appendChild(info);
+      spawn.appendChild(info);
 
       students.forEach(s=>{
         const inp=s.querySelector(".nameInput");
@@ -702,10 +772,14 @@ body {
     URL.revokeObjectURL(url);
   };
 
-  toggle.onclick=()=>{
-    if(mode==="drag") setMode("point");
-    else if(mode==="point") setMode("names");
-    else setMode("drag");
+  toggle.onclick = () => {
+    if (mode === "drag") {
+      setMode("point");
+    } else if (mode === "point") {
+      setMode("names");
+    } else {
+      setMode("drag");
+    }
   };
 
   setMode("drag");
