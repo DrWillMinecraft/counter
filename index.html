@@ -28,6 +28,10 @@ body {
   display: flex;
   align-items: center;
 }
+#sizeLabel {
+  margin-right: 10px;
+  font-size: 16px;
+}
 #sizeSlider {
   width: 160px;
 }
@@ -86,11 +90,11 @@ body {
   overflow: hidden;
 }
 
-/* ⭐ Spawn box (bottom-left) */
+/* ⭐ Spawn box (bottom-right) */
 #spawn {
   position: absolute;
   bottom: 10px;
-  left: 10px;
+  right: 10px;
   width: 220px;
   height: 220px;
   background: #111;
@@ -99,6 +103,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+/* ⭐ Spawn box highlight when deleting */
+#spawn.deleting {
+  background: #333;
+  border-color: #777;
+}
+
+#spawn.flash {
+  background: #555;
+  border-color: #aaa;
 }
 
 /* Student + Template boxes */
@@ -184,6 +200,7 @@ body {
 
   <!-- LEFT -->
   <div id="leftBar">
+    <label id="sizeLabel">Size:</label>
     <input id="sizeSlider" type="range" min="60" max="180" value="120">
   </div>
 
@@ -390,6 +407,15 @@ body {
 
     el.style.left=x+"px";
     el.style.top=y+"px";
+
+    /* ⭐ Lighten spawn box when student is over it */
+    if (drag.el.classList.contains("sBox")) {
+      if (isInsideSpawn(drag.el)) {
+        spawn.classList.add("deleting");
+      } else {
+        spawn.classList.remove("deleting");
+      }
+    }
   }
 
   function snap(el){
@@ -428,6 +454,12 @@ body {
       /* ⭐ Student dragged into spawn → delete */
       if(drag.el.classList.contains("sBox")){
         if(isInsideSpawn(drag.el)){
+
+          // Flash effect
+          spawn.classList.remove("deleting");
+          spawn.classList.add("flash");
+          setTimeout(() => spawn.classList.remove("flash"), 150);
+
           drag.el.remove();
           students = students.filter(s => s !== drag.el);
           drag=null;
@@ -459,11 +491,16 @@ body {
         scaleTextWithBox(s);
 
         drag.el.remove();
-        spawnTemplate();
+
+        // Prevent color flicker by delaying template creation
+        requestAnimationFrame(() => {
+          spawnTemplate();
+        });
       }
     }
 
     drag=null;
+    spawn.classList.remove("deleting");
 
     window.removeEventListener("mousemove",dragMove);
     window.removeEventListener("mouseup",dragEnd);
