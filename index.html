@@ -43,7 +43,7 @@
     border-color:#999;
   }
 
-  /* TOP BAR — OLD STYLE */
+  /* TOP BAR */
   #top{
     height:60px;
     display:flex;
@@ -84,7 +84,7 @@
     border-color:#3344cc;
   }
 
-  /* SETTINGS DROPDOWN */
+  /* SETTINGS */
   #settingsWrap{
     position:relative;
   }
@@ -135,7 +135,7 @@
     background:#222;
   }
 
-  /* BOX STYLE */
+  /* BOXES */
   .sBox, .tBox{
     position:absolute;
     background:#444;
@@ -263,7 +263,6 @@
 
 <body>
 
-  <!-- TOP BAR -->
   <div id="top">
 
     <div id="sizeWrap">
@@ -287,12 +286,10 @@
 
   </div>
 
-  <!-- MAIN AREA -->
   <div id="main">
     <div id="corner"></div>
   </div>
 
-  <!-- POPUP -->
   <div id="popup">
     <div id="popupBox">
       <h3 id="popupTitle">Save Code</h3>
@@ -329,10 +326,33 @@
     return "hsl("+Math.floor(Math.random()*360)+",70%,60%)";
   }
 
+  /* ⭐ Prevent student boxes from exceeding corner box size */
   function applySize(el){
-    const s=parseInt(sizeSlider.value,10);
-    el.style.width=s+"px";
-    el.style.height=s+"px";
+    let s = parseInt(sizeSlider.value,10);
+    const maxSize = 180;
+    if(s > maxSize) s = maxSize;
+
+    el.style.width = s + "px";
+    el.style.height = s + "px";
+  }
+
+  /* ⭐ Prevent boxes from flying away when zooming */
+  function clampToMain(el){
+    const mw = main.offsetWidth;
+    const mh = main.offsetHeight;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+
+    let x = parseInt(el.style.left,10);
+    let y = parseInt(el.style.top,10);
+
+    if(x < 0) x = 0;
+    if(y < 0) y = 0;
+    if(x > mw - w) x = mw - w;
+    if(y > mh - h) y = mh - h;
+
+    el.style.left = x + "px";
+    el.style.top = y + "px";
   }
 
   function scaleTextWithBox(s){
@@ -357,18 +377,29 @@
     s.innerHTML=
       '<div class="student-name">'+(name||"")+'</div>'+
       '<div class="student-score">'+score+'</div>';
+
     applySize(s);
     scaleTextWithBox(s);
+
+    /* ⭐ Required for drag to work */
+    s.style.position="absolute";
+    s.style.left="0px";
+    s.style.top="0px";
+
     return s;
   }
 
-  /* FIXED TEMPLATE LOGIC */
   function makeTemplate(){
     const t=document.createElement("div");
     t.className="tBox";
     t.style.borderColor=col();
     applySize(t);
     t.innerHTML='<div class="student-name"></div><div class="student-score">0</div>';
+
+    /* ⭐ Required for drag to work */
+    t.style.position="absolute";
+    t.style.left="0px";
+    t.style.top="0px";
 
     corner.innerHTML="";
     corner.appendChild(t);
@@ -445,17 +476,19 @@
     el.style.top=y+"px";
   }
 
-  /* FIXED DRAG END */
   function dragEnd(){
     if(drag && drag.el){
       drag.el.style.transform="rotate(0deg)";
       snap(drag.el);
+      clampToMain(drag.el);
       scaleTextWithBox(drag.el);
 
       if(drag.el.classList.contains("tBox")){
         const s=makeStudent(0,"");
         s.style.left=drag.el.style.left;
         s.style.top=drag.el.style.top;
+
+        clampToMain(s);
 
         main.appendChild(s);
         students.push(s);
@@ -597,11 +630,13 @@
   sizeSlider.oninput=()=>{
     students.forEach(s=>{
       applySize(s);
+      clampToMain(s);
       scaleTextWithBox(s);
     });
     const t=corner.querySelector(".tBox");
     if(t){
       applySize(t);
+      clampToMain(t);
     }
   };
 
@@ -694,6 +729,9 @@
         applySize(s);
         s.style.left=st.x;
         s.style.top=st.y;
+
+        clampToMain(s);
+
         main.appendChild(s);
         students.push(s);
         enableStudent(s);
