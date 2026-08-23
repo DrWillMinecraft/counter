@@ -87,13 +87,27 @@
     justify-content:center;
   }
 
-  .student-name{
-    font-size:12px;
-    margin-bottom:2px;
-    min-height:14px;
-  }
   .student-score{
     font-size:16px;
+  }
+
+  /* Rounded pill input for names */
+  .nameInput{
+    width:90%;
+    font-size:14px;
+    margin-bottom:4px;
+    text-align:center;
+    border:1px solid #aaa;
+    border-radius:999px;
+    padding:4px 10px;
+    background:#fff;
+    color:#000;
+    outline:none;
+    transition:box-shadow .2s, border-color .2s, font-size .2s;
+  }
+  .nameInput:hover{
+    box-shadow:0 0 8px #4af;
+    border-color:#4af;
   }
 
   @keyframes popIn{
@@ -179,7 +193,6 @@
     <button id="popupClose">Close</button>
   </div>
 </div>
-
 <script>
 (function(){
   const main=document.getElementById("main");
@@ -269,13 +282,16 @@
   }
 
   function startDrag(el,p,type){
+    const mainRect = main.getBoundingClientRect();
     const r = el.getBoundingClientRect();
 
     drag = {
       el,
       type,
       ox: p.clientX - r.left,
-      oy: p.clientY - r.top
+      oy: p.clientY - r.top,
+      mainX: mainRect.left,
+      mainY: mainRect.top
     };
 
     const moveHandler = ev=>{
@@ -303,8 +319,8 @@
     if(!drag)return;
     const el=drag.el;
 
-    let x=p.clientX - drag.ox;
-    let y=p.clientY - drag.oy;
+    let x = p.clientX - drag.ox - drag.mainX;
+    let y = p.clientY - drag.oy - drag.mainY;
 
     const w=el.offsetWidth, h=el.offsetHeight;
     const mw=main.offsetWidth, mh=main.offsetHeight;
@@ -378,44 +394,64 @@
 
   function enableStudent(s){
     const scoreEl = ()=>s.querySelector(".student-score");
-    const nameEl = ()=>s.querySelector(".student-name");
+    const nameSpan = s.querySelector(".student-name");
 
-    const nameSpan = nameEl();
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "Type name…";
+    nameInput.value = nameSpan.textContent || "";
+    nameInput.className = "nameInput";
+    nameInput.style.display = "none";
 
-    nameSpan.addEventListener("click", e=>{
-      if(mode!=="names")return;
-      e.stopPropagation();
-      nameSpan.contentEditable = "true";
-      nameSpan.focus();
-      const sel = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(nameSpan);
-      sel.removeAllRanges();
-      sel.addRange(range);
+    nameSpan.replaceWith(nameInput);
+
+    nameInput.addEventListener("input", ()=>{
+      const txt = nameInput.value.trim();
+      nameSpan.textContent = txt;
+
+      if (txt.length > 20) {
+        nameInput.style.fontSize = "10px";
+      } else if (txt.length > 12) {
+        nameInput.style.fontSize = "12px";
+      } else {
+        nameInput.style.fontSize = "14px";
+      }
     });
 
-    nameSpan.addEventListener("blur", ()=>{
-      nameSpan.contentEditable = "false";
-      nameSpan.textContent = nameSpan.textContent.trim();
-    });
-
-    s.addEventListener("click", e=>{
-      if(mode==="point"){
+    s.addEventListener("click", ()=>{
+      if (mode === "point") {
         const sc = scoreEl();
-        sc.textContent = String(parseInt(sc.textContent,10)+1);
-        hist.push({t:"one",s});
+        sc.textContent = String(parseInt(sc.textContent, 10) + 1);
+        hist.push({ t:"one", s });
       }
     });
 
     const start = e=>{
-      if(mode!=="drag")return;
+      if (mode !== "drag") return;
       e.preventDefault();
       const p = e.touches ? e.touches[0] : e;
-      startDrag(s,p,"student");
+      startDrag(s, p, "student");
     };
 
-    s.onmousedown=start;
-    s.ontouchstart=start;
+    s.onmousedown = start;
+    s.ontouchstart = start;
+
+    function updateNameMode(){
+      if (mode === "names") {
+        nameInput.style.display = "block";
+      } else {
+        nameInput.style.display = "none";
+        nameSpan.textContent = nameInput.value.trim();
+        if (!s.contains(nameSpan)) {
+          s.insertBefore(nameSpan, s.firstChild);
+        }
+      }
+    }
+
+    updateNameMode();
+
+    const observer = new MutationObserver(updateNameMode);
+    observer.observe(toggle, { attributes:true });
   }
 
   function setMode(m){
@@ -482,7 +518,7 @@
       corner.innerHTML="";
       const info=document.createElement("div");
       info.style.textAlign="center";
-      info.innerHTML="Tap the name above a box to edit it.<br/>Names show above the score.";
+      info.innerHTML="Use the pill box above each score to type names.";
       corner.appendChild(info);
 
       students.forEach(s=>s.classList.add("noDrag"));
@@ -562,7 +598,9 @@
       }
       const data=JSON.parse(json);
 
-      resetBtn.onclick();
+      students.forEach(s=>s.remove());
+      students=[];
+      hist=[];
 
       sizeSlider.value=data.slider;
       mode=data.mode;
