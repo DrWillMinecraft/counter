@@ -13,7 +13,7 @@ body {
   user-select: none;
 }
 
-/* ⭐ TOP BAR LAYOUT */
+/* ⭐ TOP BAR */
 #topbar {
   height: 60px;
   background: #333;
@@ -138,7 +138,7 @@ body {
   margin-top: 5px;
 }
 
-/* Name input */
+/* Name input inside student box */
 .nameInput {
   position: absolute;
   top: 5px;
@@ -148,6 +148,7 @@ body {
   border: none;
   padding: 5px;
   font-size: 16px;
+  display: none;
 }
 
 /* Popup */
@@ -274,6 +275,12 @@ body {
 
     el.style.width = s + "px";
     el.style.height = s + "px";
+
+    const nameInput = el.querySelector(".nameInput");
+    if(nameInput){
+      nameInput.style.fontSize = (s * 0.18) + "px";
+      nameInput.style.padding = (s * 0.05) + "px";
+    }
   }
 
   function clampToMain(el){
@@ -317,6 +324,13 @@ body {
       '<div class="student-name">'+(name||"")+'</div>'+
       '<div class="student-score">'+score+'</div>';
 
+    const nameInput=document.createElement("input");
+    nameInput.type="text";
+    nameInput.placeholder="Type name…";
+    nameInput.value=name||"";
+    nameInput.className="nameInput";
+    s.appendChild(nameInput);
+
     applySize(s);
     scaleTextWithBox(s);
 
@@ -327,7 +341,6 @@ body {
     return s;
   }
 
-  /* ⭐ Template spawns centered inside spawn box */
   function makeTemplate(){
     const t=document.createElement("div");
     t.className="tBox";
@@ -364,7 +377,10 @@ body {
   }
 
   function spawnTemplate(){
-    makeTemplate();
+    if(mode==="drag"){
+      spawn.innerHTML="";
+      makeTemplate();
+    }
   }
 
   function startDrag(el,p){
@@ -408,7 +424,6 @@ body {
     el.style.left=x+"px";
     el.style.top=y+"px";
 
-    /* ⭐ Lighten spawn box when student is over it */
     if (drag.el.classList.contains("sBox")) {
       if (isInsideSpawn(drag.el)) {
         spawn.classList.add("deleting");
@@ -432,7 +447,6 @@ body {
     el.style.top=y+"px";
   }
 
-  /* ⭐ Check if dragged box is inside spawn box */
   function isInsideSpawn(el){
     const spawnRect = spawn.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
@@ -451,11 +465,9 @@ body {
   function dragEnd(){
     if(drag && drag.el){
 
-      /* ⭐ Student dragged into spawn → delete */
       if(drag.el.classList.contains("sBox")){
         if(isInsideSpawn(drag.el)){
 
-          // Flash effect
           spawn.classList.remove("deleting");
           spawn.classList.add("flash");
           setTimeout(() => spawn.classList.remove("flash"), 150);
@@ -471,7 +483,6 @@ body {
       clampToMain(drag.el);
       scaleTextWithBox(drag.el);
 
-      /* ⭐ Template dragged → create student */
       if(drag.el.classList.contains("tBox")){
         const tRect = drag.el.getBoundingClientRect();
         const mRect = main.getBoundingClientRect();
@@ -492,7 +503,6 @@ body {
 
         drag.el.remove();
 
-        // Prevent color flicker by delaying template creation
         requestAnimationFrame(() => {
           spawnTemplate();
         });
@@ -511,12 +521,7 @@ body {
   function enableStudent(s){
     const nameSpan=s.querySelector(".student-name");
     const scoreEl=s.querySelector(".student-score");
-
-    const nameInput=document.createElement("input");
-    nameInput.type="text";
-    nameInput.placeholder="Type name…";
-    nameInput.value=nameSpan.textContent;
-    nameInput.className="nameInput";
+    const nameInput=s.querySelector(".nameInput");
 
     nameInput.addEventListener("input",()=>{
       nameSpan.textContent=nameInput.value.trim();
@@ -560,16 +565,23 @@ body {
     mode=m;
     toggle.textContent=m.toUpperCase();
 
+    spawn.innerHTML="";
+    spawn.classList.remove("deleting");
+
     if(m==="drag"){
       toggle.style.background="#5566ff";
-      spawn.innerHTML="";
       spawnTemplate();
+      students.forEach(s=>{
+        const nameSpan=s.querySelector(".student-name");
+        const nameInput=s.querySelector(".nameInput");
+        nameSpan.style.display="block";
+        nameInput.style.display="none";
+      });
     }
 
     if(m==="point"){
       toggle.style.background="#55aa55";
 
-      spawn.innerHTML="";
       const wrap=document.createElement("div");
       wrap.className="pointSplit";
 
@@ -605,12 +617,18 @@ body {
       wrap.appendChild(plus);
       wrap.appendChild(undo);
       spawn.appendChild(wrap);
+
+      students.forEach(s=>{
+        const nameSpan=s.querySelector(".student-name");
+        const nameInput=s.querySelector(".nameInput");
+        nameSpan.style.display="block";
+        nameInput.style.display="none";
+      });
     }
 
     if(m==="names"){
       toggle.style.background="#aa5555";
 
-      spawn.innerHTML="";
       const info=document.createElement("div");
       info.style.textAlign="center";
       info.style.fontSize="18px";
@@ -618,10 +636,10 @@ body {
       spawn.appendChild(info);
 
       students.forEach(s=>{
-        const inp=s.querySelector(".nameInput");
-        const span=s.querySelector(".student-name");
-        span.style.display="none";
-        inp.style.display="block";
+        const nameSpan=s.querySelector(".student-name");
+        const nameInput=s.querySelector(".nameInput");
+        nameSpan.style.display="none";
+        nameInput.style.display="block";
       });
     }
   }
@@ -650,7 +668,7 @@ body {
     });
 
     const t=document.querySelector(".tBox");
-    if(t){
+    if(t && mode==="drag"){
       const oldW = t.offsetWidth;
       const oldH = t.offsetHeight;
 
@@ -659,11 +677,14 @@ body {
       const newW = t.offsetWidth;
       const newH = t.offsetHeight;
 
-      const mw = main.offsetWidth;
-      const mh = main.offsetHeight;
+      const spawnRect = spawn.getBoundingClientRect();
+      const mainRect = main.getBoundingClientRect();
 
-      t.style.left = (mw - newW) / 2 + "px";
-      t.style.top  = (mh - newH) / 2 + "px";
+      const left = (spawnRect.left - mainRect.left) + (spawn.offsetWidth - newW)/2;
+      const top  = (spawnRect.top  - mainRect.top) + (spawn.offsetHeight - newH)/2;
+
+      t.style.left = left + "px";
+      t.style.top  = top  + "px";
     }
   };
 
