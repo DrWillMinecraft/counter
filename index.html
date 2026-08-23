@@ -65,6 +65,7 @@
 
   .student-name{
     font-size:12px;margin-bottom:2px;
+    min-height:14px;
   }
   .student-score{
     font-size:16px;
@@ -236,15 +237,17 @@
   }
 
   function startDrag(el,p,type){
-    const m = main.getBoundingClientRect();
+    const mainRect = main.getBoundingClientRect();
     let r = el.getBoundingClientRect();
 
     if (!main.contains(el)) {
-      const x = r.left - m.left;
-      const y = r.top - m.top;
+      const x = r.left - mainRect.left;
+      const y = r.top - mainRect.top;
+
       el.style.left = x + "px";
       el.style.top = y + "px";
       main.appendChild(el);
+
       r = el.getBoundingClientRect();
     }
 
@@ -355,17 +358,29 @@
     const scoreEl = ()=>s.querySelector(".student-score");
     const nameEl = ()=>s.querySelector(".student-name");
 
+    // Inline name editing
+    const nameSpan = nameEl();
+    nameSpan.onclick = e=>{
+      if(mode!=="names")return;
+      e.stopPropagation();
+      nameSpan.contentEditable = "true";
+      nameSpan.focus();
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(nameSpan);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    };
+    nameSpan.onblur = ()=>{
+      nameSpan.contentEditable = "false";
+      nameSpan.textContent = nameSpan.textContent.trim();
+    };
+
     s.onclick=e=>{
       if(mode==="point"){
         const sc = scoreEl();
         sc.textContent = String(parseInt(sc.textContent,10)+1);
         hist.push({t:"one",s});
-      }else if(mode==="names"){
-        const current = nameEl().textContent || "";
-        const nm = prompt("Enter name:", current);
-        if(nm!==null){
-          nameEl().textContent = nm.trim();
-        }
       }
     };
 
@@ -444,7 +459,7 @@
       corner.innerHTML="";
       const info=document.createElement("div");
       info.style.textAlign="center";
-      info.innerHTML="Tap a box to set its name.<br/>Names show above the score.";
+      info.innerHTML="Tap the name above a box to edit it.<br/>Names show above the score.";
       corner.appendChild(info);
 
       students.forEach(s=>s.classList.add("noDrag"));
@@ -542,6 +557,7 @@
       });
 
       hist=[];
+      data.hist.forEach
       data.hist.forEach(h=>{
         if(h.index>=0 && students[h.index]){
           hist.push({t:h.t,s:students[h.index]});
@@ -585,14 +601,14 @@
     URL.revokeObjectURL(url);
   };
 
+  // Cycle modes: DRAG → POINT → NAMES → DRAG
   toggle.onclick=()=>{
     if(mode==="drag") setMode("point");
     else if(mode==="point") setMode("names");
     else setMode("drag");
   };
 
+  // Start in drag mode
   setMode("drag");
 })();
 </script>
-</body>
-</html>
