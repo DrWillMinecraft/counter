@@ -43,7 +43,7 @@
     border-color:#999;
   }
 
-  /* TOP BAR — OLD STYLE, 1.5x SCALE */
+  /* TOP BAR — OLD STYLE */
   #top{
     height:60px;
     display:flex;
@@ -76,7 +76,7 @@
     height:16px;
   }
 
-  /* MODE BUTTON CENTER */
+  /* MODE BUTTON */
   #toggle{
     margin:auto;
     background:#5566ff;
@@ -135,7 +135,7 @@
     background:#222;
   }
 
-  /* OLD BOX STYLE */
+  /* BOX STYLE */
   .sBox, .tBox{
     position:absolute;
     background:#444;
@@ -161,7 +161,7 @@
     font-size:16px;
   }
 
-  /* CORNER TEMPLATE BOX — OLD STYLE */
+  /* CORNER BOX */
   #corner{
     position:absolute;
     width:180px;
@@ -266,16 +266,13 @@
   <!-- TOP BAR -->
   <div id="top">
 
-    <!-- LEFT: SIZE SLIDER -->
     <div id="sizeWrap">
       SIZE:
       <input id="sizeSlider" type="range" min="40" max="200" value="80">
     </div>
 
-    <!-- CENTER: MODE BUTTON -->
     <button id="toggle">DRAG</button>
 
-    <!-- RIGHT: RESET + SETTINGS -->
     <button id="resetBtn">RESET</button>
 
     <div id="settingsWrap">
@@ -373,6 +370,9 @@
     applySize(t);
     t.innerHTML='<div class="student-name"></div><div class="student-score">0</div>';
 
+    corner.innerHTML="";
+    corner.appendChild(t);
+
     const start=e=>{
       if(mode!=="drag")return;
       e.preventDefault();
@@ -382,9 +382,6 @@
 
     t.onmousedown=start;
     t.ontouchstart=start;
-
-    corner.innerHTML="";
-    corner.appendChild(t);
   }
 
   function spawnTemplate(){
@@ -448,6 +445,7 @@
     el.style.top=y+"px";
   }
 
+  /* FIXED DRAG END */
   function dragEnd(){
     if(drag && drag.el){
       drag.el.style.transform="rotate(0deg)";
@@ -458,10 +456,12 @@
         const s=makeStudent(0,"");
         s.style.left=drag.el.style.left;
         s.style.top=drag.el.style.top;
+
         main.appendChild(s);
         students.push(s);
         enableStudent(s);
         scaleTextWithBox(s);
+
         spawnTemplate();
       }
     }
