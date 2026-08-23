@@ -381,7 +381,6 @@
     applySize(s);
     scaleTextWithBox(s);
 
-    /* ⭐ Required for drag to work */
     s.style.position="absolute";
     s.style.left="0px";
     s.style.top="0px";
@@ -396,10 +395,16 @@
     applySize(t);
     t.innerHTML='<div class="student-name"></div><div class="student-score">0</div>';
 
-    /* ⭐ Required for drag to work */
     t.style.position="absolute";
-    t.style.left="0px";
-    t.style.top="0px";
+
+    /* ⭐ Center template inside corner box */
+    const cw = corner.offsetWidth;
+    const ch = corner.offsetHeight;
+    const tw = t.offsetWidth;
+    const th = t.offsetHeight;
+
+    t.style.left = (cw - tw) / 2 + "px";
+    t.style.top  = (ch - th) / 2 + "px";
 
     corner.innerHTML="";
     corner.appendChild(t);
@@ -430,7 +435,8 @@
       ox:p.clientX-r.left,
       oy:p.clientY-r.top,
       mainX:mainRect.left,
-      mainY:mainRect.top
+      mainY:mainRect.top,
+      justStarted:true
     };
 
     window.addEventListener("mousemove",dragMove,{passive:false});
@@ -441,6 +447,7 @@
 
   function dragMove(e){
     if(!drag)return;
+
     const p=e.touches?e.touches[0]:e;
 
     const el=drag.el;
@@ -458,8 +465,6 @@
 
     el.style.left=x+"px";
     el.style.top=y+"px";
-
-    el.style.transform="rotate(3deg)";
   }
 
   function snap(el){
@@ -478,7 +483,6 @@
 
   function dragEnd(){
     if(drag && drag.el){
-      drag.el.style.transform="rotate(0deg)";
       snap(drag.el);
       clampToMain(drag.el);
       scaleTextWithBox(drag.el);
@@ -522,19 +526,22 @@
       scaleTextWithBox(s);
     });
 
+    function updateNameMode(){
+      if(mode === "names"){
+        nameSpan.style.display = "none";
+        if(!s.contains(nameInput)) s.insertBefore(nameInput, nameSpan);
+        nameInput.style.display = "block";   // ⭐ Show ALL inputs
+      } else {
+        nameSpan.style.display = "block";
+        nameInput.style.display = "none";
+      }
+    }
+
     s.addEventListener("click",()=>{
       if(mode==="point"){
         scoreEl.textContent=parseInt(scoreEl.textContent,10)+1;
         hist.push({t:"one",s});
         scaleTextWithBox(s);
-      }
-      if(mode==="names"){
-        students.forEach(o=>{
-          const inp=o.querySelector(".nameInput");
-          if(inp && o!==s) inp.style.display="none";
-        });
-        nameInput.style.display="block";
-        nameInput.focus();
       }
     });
 
@@ -549,17 +556,6 @@
       const p=e.touches?e.touches[0]:e;
       startDrag(s,p);
     };
-
-    function updateNameMode(){
-      if(mode==="names"){
-        if(!s.contains(nameInput)) s.insertBefore(nameInput,nameSpan);
-        nameSpan.style.display="none";
-        nameInput.style.display="none";
-      }else{
-        nameSpan.style.display="block";
-        if(s.contains(nameInput)) nameInput.style.display="none";
-      }
-    }
 
     updateNameMode();
   }
@@ -622,21 +618,56 @@
       const info=document.createElement("div");
       info.style.textAlign="center";
       info.style.fontSize="18px";
-      info.textContent="Click a box to edit its name.";
+      info.textContent="Edit all names below.";
       corner.appendChild(info);
+
+      students.forEach(s=>{
+        const inp=s.querySelector(".nameInput");
+        const span=s.querySelector(".student-name");
+        span.style.display="none";
+        inp.style.display="block";
+      });
     }
   }
 
   sizeSlider.oninput=()=>{
     students.forEach(s=>{
+      const oldW = s.offsetWidth;
+      const oldH = s.offsetHeight;
+
       applySize(s);
+
+      const newW = s.offsetWidth;
+      const newH = s.offsetHeight;
+
+      const dx = (oldW - newW) / 2;
+      const dy = (oldH - newH) / 2;
+
+      let x = parseInt(s.style.left,10) + dx;
+      let y = parseInt(s.style.top,10) + dy;
+
+      s.style.left = x + "px";
+      s.style.top = y + "px";
+
       clampToMain(s);
       scaleTextWithBox(s);
     });
+
     const t=corner.querySelector(".tBox");
     if(t){
+      const oldW = t.offsetWidth;
+      const oldH = t.offsetHeight;
+
       applySize(t);
-      clampToMain(t);
+
+      const newW = t.offsetWidth;
+      const newH = t.offsetHeight;
+
+      const cw = corner.offsetWidth;
+      const ch = corner.offsetHeight;
+
+      t.style.left = (cw - newW) / 2 + "px";
+      t.style.top  = (ch - newH) / 2 + "px";
     }
   };
 
