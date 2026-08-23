@@ -9,7 +9,7 @@
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#111;
+    background:#222;
     color:#eee;
     font-family:sans-serif;
     touch-action:none;
@@ -21,126 +21,148 @@
     color:#222;
   }
 
-  /* TOP BAR — 2x size */
+  /* TOP BAR — OLD STYLE, 1.5x SCALE */
   #top{
-    height:80px;
+    height:60px;
     display:flex;
     align-items:center;
-    justify-content:flex-end;
-    gap:20px;
-    background:#222;
-    padding:0 20px;
-    font-size:28px;
+    justify-content:space-between;
+    background:#333;
+    padding:0 12px;
+    font-size:18px;
   }
 
   #top button{
-    padding:20px 32px;
-    border:2px solid #555;
-    border-radius:8px;
-    background:#333;
+    padding:10px 16px;
+    border:1px solid #666;
+    border-radius:4px;
+    background:#444;
     color:#eee;
     cursor:pointer;
-    font-size:28px;
-  }
-
-  body.light #top button{
-    background:#ccc;
-    color:#222;
-    border-color:#888;
+    font-size:18px;
   }
 
   #sizeWrap{
-    margin-right:auto;
     display:flex;
     align-items:center;
-    gap:20px;
-    font-size:28px;
+    gap:10px;
+    font-size:18px;
   }
 
   #sizeSlider{
-    width:240px;
-    height:20px;
+    width:180px;
+    height:16px;
+  }
+
+  /* MODE BUTTON CENTER */
+  #toggle{
+    margin:auto;
+  }
+
+  /* SETTINGS DROPDOWN */
+  #settingsWrap{
+    position:relative;
+  }
+
+  #settingsBtn{
+    padding:10px 16px;
+    border:1px solid #666;
+    border-radius:4px;
+    background:#444;
+    color:#eee;
+    cursor:pointer;
+    font-size:18px;
+  }
+
+  #settingsMenu{
+    position:absolute;
+    top:100%;
+    right:0;
+    background:#333;
+    border:1px solid #666;
+    border-radius:4px;
+    display:none;
+    flex-direction:column;
+    min-width:160px;
+    z-index:1000;
+  }
+
+  .setItem{
+    padding:10px;
+    color:#eee;
+    cursor:pointer;
+    border-bottom:1px solid #555;
+  }
+
+  .setItem:last-child{
+    border-bottom:none;
+  }
+
+  .setItem:hover{
+    background:#555;
   }
 
   /* MAIN AREA */
   #main{
     position:relative;
     width:100%;
-    height:calc(100vh - 80px);
-    overflow:hidden;
-  }
-
-  /* CORNER TEMPLATE BOX */
-  #corner{
-    position:absolute;
-    width:220px;
-    height:220px;
-    right:10px;
-    bottom:10px;
-    border:2px solid #888;
-    border-radius:8px;
+    height:calc(100vh - 60px);
     background:#222;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:10;
   }
 
-  /* STUDENT BOX */
-  .sBox{
+  /* OLD BOX STYLE */
+  .sBox, .tBox{
     position:absolute;
-    min-width:60px;
-    min-height:40px;
-    padding:6px;
-    border-radius:6px;
-    border:2px solid;
-    background:#1c1c1c;
-    color:#eee;
+    background:#444;
+    border:1px solid #777;
+    border-radius:4px;
+    color:#fff;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
+    padding:4px;
     user-select:none;
     cursor:pointer;
     transition:transform .15s;
   }
 
-  /* TEMPLATE BOX */
-  .tBox{
-    position:absolute;
-    width:60px;
-    height:60px;
-    padding:6px;
-    border-radius:6px;
-    border:2px solid;
-    background:#1c1c1c;
-    color:#eee;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    user-select:none;
-    cursor:pointer;
+  .student-name{
+    font-size:16px;
+    margin-bottom:4px;
   }
 
-  /* PILL NAME INPUT */
+  .student-score{
+    font-size:16px;
+  }
+
+  /* CORNER TEMPLATE BOX — OLD STYLE */
+  #corner{
+    position:absolute;
+    width:180px;
+    height:180px;
+    right:10px;
+    bottom:10px;
+    background:#333;
+    border:1px solid #666;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* NAME INPUT — OLD STYLE */
   .nameInput{
     width:90%;
     font-size:16px;
     margin-bottom:4px;
     text-align:center;
     border:1px solid #aaa;
-    border-radius:999px;
+    border-radius:4px;
     padding:4px 10px;
     background:#fff;
     color:#000;
     outline:none;
-    transition:box-shadow .2s, border-color .2s, font-size .2s;
-  }
-
-  .nameInput:hover{
-    box-shadow:0 0 8px #4af;
-    border-color:#4af;
   }
 
   /* POPUP */
@@ -155,17 +177,19 @@
   }
 
   #popupBox{
-    background:#222;
+    background:#333;
     padding:20px;
     border-radius:8px;
     width:300px;
     text-align:center;
     color:#eee;
+    border:1px solid #666;
   }
 
   body.light #popupBox{
     background:#fff;
     color:#222;
+    border-color:#aaa;
   }
 
   #popupCode{
@@ -179,12 +203,12 @@
   #popupBox button{
     padding:10px 20px;
     margin:5px;
-    border:2px solid #555;
+    border:1px solid #666;
     border-radius:6px;
-    background:#333;
+    background:#444;
     color:#eee;
     cursor:pointer;
-    font-size:20px;
+    font-size:18px;
   }
 
   body.light #popupBox button{
@@ -196,32 +220,47 @@
 </head>
 <body>
 
-<div id="top">
-  <div id="sizeWrap">
-    SIZE:
-    <input id="sizeSlider" type="range" min="40" max="200" value="80">
+  <!-- TOP BAR -->
+  <div id="top">
+
+    <!-- LEFT: SIZE SLIDER -->
+    <div id="sizeWrap">
+      SIZE:
+      <input id="sizeSlider" type="range" min="40" max="200" value="80">
+    </div>
+
+    <!-- CENTER: MODE BUTTON -->
+    <button id="toggle">DRAG</button>
+
+    <!-- RIGHT: RESET + SETTINGS -->
+    <button id="resetBtn">RESET</button>
+
+    <div id="settingsWrap">
+      <button id="settingsBtn">SETTINGS</button>
+      <div id="settingsMenu">
+        <div class="setItem" id="setSave">Save</div>
+        <div class="setItem" id="setLoad">Load</div>
+        <div class="setItem" id="setExport">Export</div>
+        <div class="setItem" id="setLightDark">Light / Dark Mode</div>
+      </div>
+    </div>
+
   </div>
 
-  <button id="modeBtn">LIGHT MODE</button>
-  <button id="toggle">DRAG</button>
-  <button id="resetBtn">RESET</button>
-  <button id="saveBtn">SAVE</button>
-  <button id="loadBtn">LOAD</button>
-  <button id="exportBtn">EXPORT</button>
-</div>
-
-<div id="main">
-  <div id="corner"></div>
-</div>
-
-<div id="popup">
-  <div id="popupBox">
-    <h3>Save Code</h3>
-    <div id="popupCode"></div>
-    <button id="popupCopy">Copy</button>
-    <button id="popupClose">Close</button>
+  <!-- MAIN AREA -->
+  <div id="main">
+    <div id="corner"></div>
   </div>
-</div>
+
+  <!-- POPUP (SAVE CODE + RESET CONFIRMATION) -->
+  <div id="popup">
+    <div id="popupBox">
+      <h3 id="popupTitle">Save Code</h3>
+      <div id="popupCode"></div>
+      <button id="popupCopy">Copy</button>
+      <button id="popupClose">Close</button>
+    </div>
+  </div>
 
 </body>
 <script>
@@ -232,12 +271,12 @@
   const toggle=document.getElementById("toggle");
   const sizeSlider=document.getElementById("sizeSlider");
   const resetBtn=document.getElementById("resetBtn");
-  const saveBtn=document.getElementById("saveBtn");
-  const loadBtn=document.getElementById("loadBtn");
-  const modeBtn=document.getElementById("modeBtn");
-  const exportBtn=document.getElementById("exportBtn");
+
+  const settingsBtn=document.getElementById("settingsBtn");
+  const settingsMenu=document.getElementById("settingsMenu");
 
   const popup=document.getElementById("popup");
+  const popupTitle=document.getElementById("popupTitle");
   const popupCode=document.getElementById("popupCode");
   const popupCopy=document.getElementById("popupCopy");
   const popupClose=document.getElementById("popupClose");
@@ -246,18 +285,21 @@
   let drag=null;
   let students=[];
   let hist=[];
-  const grid=20; // GRID B
+  const grid=20;
 
+  /* RANDOM COLOR */
   function col(){
     return "hsl("+Math.floor(Math.random()*360)+",70%,60%)";
   }
 
+  /* APPLY SIZE */
   function applySize(el){
     const s=parseInt(sizeSlider.value,10);
     el.style.width=s+"px";
     el.style.height=s+"px";
   }
 
+  /* SCALE TEXT WITH BOX SIZE */
   function scaleTextWithBox(s){
     const name=s.querySelector(".student-name");
     const score=s.querySelector(".student-score");
@@ -273,6 +315,7 @@
     score.style.fontSize=(base*0.9)+"px";
   }
 
+  /* CREATE STUDENT BOX */
   function makeStudent(score,name){
     const s=document.createElement("div");
     s.className="sBox";
@@ -285,6 +328,7 @@
     return s;
   }
 
+  /* TEMPLATE BOX */
   function makeTemplate(){
     const t=document.createElement("div");
     t.className="tBox";
@@ -329,6 +373,7 @@
     corner.appendChild(t);
   }
 
+  /* DRAG START */
   function startDrag(el,p){
     if(mode!=="drag")return;
 
@@ -349,6 +394,7 @@
     window.addEventListener("touchend",dragEnd,{passive:false});
   }
 
+  /* DRAG MOVE */
   function dragMove(e){
     if(!drag)return;
     const p=e.touches?e.touches[0]:e;
@@ -372,6 +418,7 @@
     el.style.transform="rotate(3deg)";
   }
 
+  /* SNAP TO GRID */
   function snap(el){
     const r=el.getBoundingClientRect();
     const m=main.getBoundingClientRect();
@@ -386,6 +433,7 @@
     el.style.top=y+"px";
   }
 
+  /* DRAG END */
   function dragEnd(){
     if(drag && drag.el){
       drag.el.style.transform="rotate(0deg)";
@@ -401,6 +449,7 @@
     window.removeEventListener("touchend",dragEnd);
   }
 
+  /* ENABLE STUDENT BOX */
   function enableStudent(s){
     const nameSpan=s.querySelector(".student-name");
     const scoreEl=s.querySelector(".student-score");
@@ -456,10 +505,9 @@
     }
 
     updateNameMode();
-
-    const obs=new MutationObserver(updateNameMode);
-    obs.observe(toggle,{attributes:true});
   }
+
+  /* SET MODE */
   function setMode(m){
     mode=m;
     toggle.textContent=m.toUpperCase();
@@ -476,7 +524,7 @@
       wrap.style.flexDirection="column";
       wrap.style.alignItems="center";
       wrap.style.justifyContent="center";
-      wrap.style.fontSize="28px";
+      wrap.style.fontSize="18px";
 
       const plus=document.createElement("button");
       plus.textContent="ALL +1";
@@ -516,12 +564,13 @@
       corner.innerHTML="";
       const info=document.createElement("div");
       info.style.textAlign="center";
-      info.style.fontSize="24px";
+      info.style.fontSize="18px";
       info.textContent="Click a box to edit its name.";
       corner.appendChild(info);
     }
   }
 
+  /* SIZE SLIDER */
   sizeSlider.oninput=()=>{
     students.forEach(s=>{
       applySize(s);
@@ -533,19 +582,35 @@
     }
   };
 
+  /* RESET CONFIRMATION */
   resetBtn.onclick=()=>{
+    const ok=confirm("Are you sure you want to reset all students?");
+    if(!ok)return;
+
     students.forEach(s=>s.remove());
     students=[];
     hist=[];
   };
 
-  modeBtn.onclick=()=>{
-    document.body.classList.toggle("light");
-    modeBtn.textContent=document.body.classList.contains("light")
-      ?"DARK MODE"
-      :"LIGHT MODE";
+  /* SETTINGS DROPDOWN */
+  settingsBtn.onclick=()=>{
+    settingsMenu.style.display=
+      settingsMenu.style.display==="flex" ? "none" : "flex";
   };
 
+  document.addEventListener("click",(e)=>{
+    if(!settingsBtn.contains(e.target) &&
+       !settingsMenu.contains(e.target)){
+      settingsMenu.style.display="none";
+    }
+  });
+
+  /* LIGHT / DARK MODE */
+  document.getElementById("setLightDark").onclick=()=>{
+    document.body.classList.toggle("light");
+  };
+
+  /* SAVE CODE GENERATION */
   function generateCode(){
     const data={
       slider:sizeSlider.value,
@@ -571,7 +636,9 @@
     return code;
   }
 
-  saveBtn.onclick=()=>{
+  /* SAVE */
+  document.getElementById("setSave").onclick=()=>{
+    popupTitle.textContent="Save Code";
     popupCode.textContent=generateCode();
     popup.style.display="flex";
   };
@@ -584,7 +651,8 @@
     popup.style.display="none";
   };
 
-  loadBtn.onclick=()=>{
+  /* LOAD */
+  document.getElementById("setLoad").onclick=()=>{
     const code=prompt("Paste your save code:");
     if(!code)return;
 
@@ -627,7 +695,8 @@
     }
   };
 
-  exportBtn.onclick=()=>{
+  /* EXPORT CSV */
+  document.getElementById("setExport").onclick=()=>{
     const rows=students.map(s=>{
       return{
         name:s.querySelector(".student-name").textContent,
@@ -659,13 +728,14 @@
     URL.revokeObjectURL(url);
   };
 
+  /* MODE BUTTON */
   toggle.onclick=()=>{
     if(mode==="drag") setMode("point");
     else if(mode==="point") setMode("names");
     else setMode("drag");
   };
 
-  // init
+  /* INIT */
   setMode("drag");
 
 })();
