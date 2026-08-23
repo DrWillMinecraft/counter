@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html>
 <head>
 <meta charset="UTF-8" />
 <title>Point Counter</title>
@@ -17,8 +19,28 @@
   }
 
   body.light{
-    background:#f5f5f5;
+    background:#ddd;
     color:#222;
+  }
+
+  body.light #main{
+    background:#ddd;
+  }
+
+  body.light #top{
+    background:#ccc;
+  }
+
+  body.light .sBox,
+  body.light .tBox{
+    background:#eee;
+    color:#222;
+    border-color:#999;
+  }
+
+  body.light #corner{
+    background:#ccc;
+    border-color:#999;
   }
 
   /* TOP BAR — OLD STYLE, 1.5x SCALE */
@@ -57,6 +79,9 @@
   /* MODE BUTTON CENTER */
   #toggle{
     margin:auto;
+    background:#5566ff;
+    color:#fff;
+    border-color:#3344cc;
   }
 
   /* SETTINGS DROPDOWN */
@@ -151,7 +176,24 @@
     justify-content:center;
   }
 
-  /* NAME INPUT — OLD STYLE */
+  /* POINT MODE SPLIT */
+  .pointSplit{
+    display:flex;
+    flex-direction:row;
+    width:100%;
+    height:100%;
+  }
+
+  .pointSplit button{
+    flex:1;
+    height:100%;
+    border:1px solid #666;
+    background:#444;
+    color:#eee;
+    font-size:18px;
+  }
+
+  /* NAME INPUT */
   .nameInput{
     width:90%;
     font-size:16px;
@@ -218,6 +260,7 @@
   }
 </style>
 </head>
+
 <body>
 
   <!-- TOP BAR -->
@@ -252,7 +295,7 @@
     <div id="corner"></div>
   </div>
 
-  <!-- POPUP (SAVE CODE + RESET CONFIRMATION) -->
+  <!-- POPUP -->
   <div id="popup">
     <div id="popupBox">
       <h3 id="popupTitle">Save Code</h3>
@@ -261,8 +304,6 @@
       <button id="popupClose">Close</button>
     </div>
   </div>
-
-</body>
 <script>
 (function(){
 
@@ -287,19 +328,16 @@
   let hist=[];
   const grid=20;
 
-  /* RANDOM COLOR */
   function col(){
     return "hsl("+Math.floor(Math.random()*360)+",70%,60%)";
   }
 
-  /* APPLY SIZE */
   function applySize(el){
     const s=parseInt(sizeSlider.value,10);
     el.style.width=s+"px";
     el.style.height=s+"px";
   }
 
-  /* SCALE TEXT WITH BOX SIZE */
   function scaleTextWithBox(s){
     const name=s.querySelector(".student-name");
     const score=s.querySelector(".student-score");
@@ -315,7 +353,6 @@
     score.style.fontSize=(base*0.9)+"px";
   }
 
-  /* CREATE STUDENT BOX */
   function makeStudent(score,name){
     const s=document.createElement("div");
     s.className="sBox";
@@ -328,7 +365,7 @@
     return s;
   }
 
-  /* TEMPLATE BOX */
+  /* FIXED TEMPLATE LOGIC */
   function makeTemplate(){
     const t=document.createElement("div");
     t.className="tBox";
@@ -340,7 +377,6 @@
       if(mode!=="drag")return;
       e.preventDefault();
       const p=e.touches?e.touches[0]:e;
-      spawnTemplate();
       startDrag(t,p);
     };
 
@@ -352,28 +388,9 @@
   }
 
   function spawnTemplate(){
-    const t=document.createElement("div");
-    t.className="tBox";
-    t.style.borderColor=col();
-    applySize(t);
-    t.innerHTML='<div class="student-name"></div><div class="student-score">0</div>';
-
-    const start=e=>{
-      if(mode!=="drag")return;
-      e.preventDefault();
-      const p=e.touches?e.touches[0]:e;
-      spawnTemplate();
-      startDrag(t,p);
-    };
-
-    t.onmousedown=start;
-    t.ontouchstart=start;
-
-    corner.innerHTML="";
-    corner.appendChild(t);
+    makeTemplate();
   }
 
-  /* DRAG START */
   function startDrag(el,p){
     if(mode!=="drag")return;
 
@@ -394,7 +411,6 @@
     window.addEventListener("touchend",dragEnd,{passive:false});
   }
 
-  /* DRAG MOVE */
   function dragMove(e){
     if(!drag)return;
     const p=e.touches?e.touches[0]:e;
@@ -418,7 +434,6 @@
     el.style.transform="rotate(3deg)";
   }
 
-  /* SNAP TO GRID */
   function snap(el){
     const r=el.getBoundingClientRect();
     const m=main.getBoundingClientRect();
@@ -433,12 +448,22 @@
     el.style.top=y+"px";
   }
 
-  /* DRAG END */
   function dragEnd(){
     if(drag && drag.el){
       drag.el.style.transform="rotate(0deg)";
       snap(drag.el);
       scaleTextWithBox(drag.el);
+
+      if(drag.el.classList.contains("tBox")){
+        const s=makeStudent(0,"");
+        s.style.left=drag.el.style.left;
+        s.style.top=drag.el.style.top;
+        main.appendChild(s);
+        students.push(s);
+        enableStudent(s);
+        scaleTextWithBox(s);
+        spawnTemplate();
+      }
     }
 
     drag=null;
@@ -449,7 +474,6 @@
     window.removeEventListener("touchend",dragEnd);
   }
 
-  /* ENABLE STUDENT BOX */
   function enableStudent(s){
     const nameSpan=s.querySelector(".student-name");
     const scoreEl=s.querySelector(".student-score");
@@ -507,24 +531,22 @@
     updateNameMode();
   }
 
-  /* SET MODE */
   function setMode(m){
     mode=m;
     toggle.textContent=m.toUpperCase();
 
     if(m==="drag"){
+      toggle.style.background="#5566ff";
       corner.innerHTML="";
       makeTemplate();
     }
 
     if(m==="point"){
+      toggle.style.background="#55aa55";
+
       corner.innerHTML="";
       const wrap=document.createElement("div");
-      wrap.style.display="flex";
-      wrap.style.flexDirection="column";
-      wrap.style.alignItems="center";
-      wrap.style.justifyContent="center";
-      wrap.style.fontSize="18px";
+      wrap.className="pointSplit";
 
       const plus=document.createElement("button");
       plus.textContent="ALL +1";
@@ -561,6 +583,8 @@
     }
 
     if(m==="names"){
+      toggle.style.background="#aa5555";
+
       corner.innerHTML="";
       const info=document.createElement("div");
       info.style.textAlign="center";
@@ -570,7 +594,6 @@
     }
   }
 
-  /* SIZE SLIDER */
   sizeSlider.oninput=()=>{
     students.forEach(s=>{
       applySize(s);
@@ -582,7 +605,6 @@
     }
   };
 
-  /* RESET CONFIRMATION */
   resetBtn.onclick=()=>{
     const ok=confirm("Are you sure you want to reset all students?");
     if(!ok)return;
@@ -592,7 +614,6 @@
     hist=[];
   };
 
-  /* SETTINGS DROPDOWN */
   settingsBtn.onclick=()=>{
     settingsMenu.style.display=
       settingsMenu.style.display==="flex" ? "none" : "flex";
@@ -605,12 +626,10 @@
     }
   });
 
-  /* LIGHT / DARK MODE */
   document.getElementById("setLightDark").onclick=()=>{
     document.body.classList.toggle("light");
   };
 
-  /* SAVE CODE GENERATION */
   function generateCode(){
     const data={
       slider:sizeSlider.value,
@@ -636,7 +655,6 @@
     return code;
   }
 
-  /* SAVE */
   document.getElementById("setSave").onclick=()=>{
     popupTitle.textContent="Save Code";
     popupCode.textContent=generateCode();
@@ -651,7 +669,6 @@
     popup.style.display="none";
   };
 
-  /* LOAD */
   document.getElementById("setLoad").onclick=()=>{
     const code=prompt("Paste your save code:");
     if(!code)return;
@@ -695,7 +712,6 @@
     }
   };
 
-  /* EXPORT CSV */
   document.getElementById("setExport").onclick=()=>{
     const rows=students.map(s=>{
       return{
@@ -728,15 +744,16 @@
     URL.revokeObjectURL(url);
   };
 
-  /* MODE BUTTON */
   toggle.onclick=()=>{
     if(mode==="drag") setMode("point");
     else if(mode==="point") setMode("names");
     else setMode("drag");
   };
 
-  /* INIT */
   setMode("drag");
 
 })();
 </script>
+
+</body>
+</html>
