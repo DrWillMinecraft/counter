@@ -1,54 +1,76 @@
-<!DOCTYPE html>
-<html>
 <head>
 <meta charset="UTF-8" />
 <title>Point Counter</title>
+
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;transition:background .3s,color .3s}
+  *{box-sizing:border-box;margin:0;padding:0;}
+
   html,body{
-    width:100%;height:100%;
+    width:100%;
+    height:100%;
     overflow:hidden;
-    background:#111;color:#eee;font-family:sans-serif;
+    background:#111;
+    color:#eee;
+    font-family:sans-serif;
     touch-action:none;
     overscroll-behavior:none;
   }
 
-  body.light{background:#f5f5f5;color:#222}
-  body.light #top{background:#ddd}
-  body.light #corner{background:#eee;border-color:#999}
-  body.light .tBox,body.light .sBox{background:#fff;color:#222}
+  body.light{
+    background:#f5f5f5;
+    color:#222;
+  }
 
+  /* TOP BAR — 2x size */
   #top{
-    height:40px;display:flex;align-items:center;
-    justify-content:flex-end;gap:10px;
-    background:#222;padding:0 10px;
+    height:80px;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:20px;
+    background:#222;
+    padding:0 20px;
+    font-size:28px;
   }
 
-  #toggle,#resetBtn,#saveBtn,#loadBtn,#modeBtn,#exportBtn{
-    padding:10px 16px;border:1px solid #555;border-radius:4px;
-    background:#333;color:#eee;cursor:pointer;font-size:16px;
-    transition:background .2s;
+  #top button{
+    padding:20px 32px;
+    border:2px solid #555;
+    border-radius:8px;
+    background:#333;
+    color:#eee;
+    cursor:pointer;
+    font-size:28px;
   }
-  body.light #toggle,body.light #resetBtn,
-  body.light #saveBtn,body.light #loadBtn,
-  body.light #modeBtn,body.light #exportBtn{
-    background:#ccc;color:#222;border-color:#888;
+
+  body.light #top button{
+    background:#ccc;
+    color:#222;
+    border-color:#888;
   }
 
-  #toggle.drag{background:#2b5}
-  #toggle.point{background:#58b}
-  #toggle.names{background:#b85}
+  #sizeWrap{
+    margin-right:auto;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    font-size:28px;
+  }
 
-  #sizeWrap{display:flex;align-items:center;gap:10px;font-size:14px;margin-right:auto}
-  #sizeSlider{width:120px}
+  #sizeSlider{
+    width:240px;
+    height:20px;
+  }
 
+  /* MAIN AREA */
   #main{
     position:relative;
     width:100%;
-    height:calc(100vh - 40px);
+    height:calc(100vh - 80px);
     overflow:hidden;
   }
 
+  /* CORNER TEMPLATE BOX */
   #corner{
     position:absolute;
     width:220px;
@@ -61,12 +83,11 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    transition:box-shadow .15s,border-color .15s;
     z-index:10;
   }
-  #corner.glow{box-shadow:0 0 15px #ff0;border-color:#ff0}
 
-  .tBox,.sBox{
+  /* STUDENT BOX */
+  .sBox{
     position:absolute;
     min-width:60px;
     min-height:40px;
@@ -75,26 +96,37 @@
     border:2px solid;
     background:#1c1c1c;
     color:#eee;
-    user-select:none;
-    cursor:pointer;
-    font-size:16px;
-    opacity:0;
-    transform:scale(.9);
-    animation:popIn .2s forwards;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
+    user-select:none;
+    cursor:pointer;
+    transition:transform .15s;
   }
 
-  .student-score{
-    font-size:16px;
+  /* TEMPLATE BOX */
+  .tBox{
+    position:absolute;
+    width:60px;
+    height:60px;
+    padding:6px;
+    border-radius:6px;
+    border:2px solid;
+    background:#1c1c1c;
+    color:#eee;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    user-select:none;
+    cursor:pointer;
   }
 
-  /* Rounded pill input for names */
+  /* PILL NAME INPUT */
   .nameInput{
     width:90%;
-    font-size:14px;
+    font-size:16px;
     margin-bottom:4px;
     text-align:center;
     border:1px solid #aaa;
@@ -105,63 +137,60 @@
     outline:none;
     transition:box-shadow .2s, border-color .2s, font-size .2s;
   }
+
   .nameInput:hover{
     box-shadow:0 0 8px #4af;
     border-color:#4af;
   }
 
-  @keyframes popIn{
-    to{opacity:1;transform:scale(1)}
-  }
-
-  .snapAnim{
-    animation:snapSoft .15s;
-  }
-
-  @keyframes snapSoft{
-    from{transform:translate(0,4px);opacity:.95}
-    to{transform:translate(0,0);opacity:1}
-  }
-
-  .sBox.noDrag{cursor:default}
-
-  .splitWrap{
+  /* POPUP */
+  #popup{
+    position:fixed;
+    top:0;left:0;
     width:100%;height:100%;
-    display:flex;flex-direction:row;
-  }
-  .half{
-    flex:1;
-    display:flex;
+    background:rgba(0,0,0,.6);
+    display:none;
     align-items:center;
     justify-content:center;
-    border-right:1px solid #444;
-    cursor:pointer;
-    font-size:14px;
   }
-  .half:last-child{border-right:none}
-  .half.plus{background:#264;border-radius:6px 0 0 6px}
-  .half.undo{background:#642;border-radius:0 6px 6px 0}
 
-  #popup{
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,.6);display:none;
-    align-items:center;justify-content:center;
-  }
   #popupBox{
-    background:#222;padding:20px;border-radius:8px;
-    width:300px;text-align:center;color:#eee;
+    background:#222;
+    padding:20px;
+    border-radius:8px;
+    width:300px;
+    text-align:center;
+    color:#eee;
   }
-  body.light #popupBox{background:#fff;color:#222}
+
+  body.light #popupBox{
+    background:#fff;
+    color:#222;
+  }
+
   #popupCode{
-    word-break:break-all;margin:10px 0;padding:10px;
-    background:#0002;border-radius:6px;
+    word-break:break-all;
+    margin:10px 0;
+    padding:10px;
+    background:#0002;
+    border-radius:6px;
   }
-  #popupClose,#popupCopy{
-    padding:6px 12px;margin:5px;border:1px solid #555;
-    border-radius:4px;background:#333;color:#eee;cursor:pointer;
+
+  #popupBox button{
+    padding:10px 20px;
+    margin:5px;
+    border:2px solid #555;
+    border-radius:6px;
+    background:#333;
+    color:#eee;
+    cursor:pointer;
+    font-size:20px;
   }
-  body.light #popupClose,body.light #popupCopy{
-    background:#ccc;color:#222;border-color:#888;
+
+  body.light #popupBox button{
+    background:#ccc;
+    color:#222;
+    border-color:#888;
   }
 </style>
 </head>
@@ -170,15 +199,15 @@
 <div id="top">
   <div id="sizeWrap">
     SIZE:
-    <input id="sizeSlider" type="range" min="40" max="160" value="60">
+    <input id="sizeSlider" type="range" min="40" max="200" value="80">
   </div>
 
-  <div id="toggle" class="drag">DRAG</div>
-  <div id="resetBtn">RESET</div>
-  <div id="saveBtn">SAVE</div>
-  <div id="loadBtn">LOAD</div>
-  <div id="exportBtn">EXPORT</div>
-  <div id="modeBtn">LIGHT MODE</div>
+  <button id="modeBtn">LIGHT MODE</button>
+  <button id="toggle">DRAG</button>
+  <button id="resetBtn">RESET</button>
+  <button id="saveBtn">SAVE</button>
+  <button id="loadBtn">LOAD</button>
+  <button id="exportBtn">EXPORT</button>
 </div>
 
 <div id="main">
@@ -193,8 +222,11 @@
     <button id="popupClose">Close</button>
   </div>
 </div>
+
+</body>
 <script>
 (function(){
+
   const main=document.getElementById("main");
   const corner=document.getElementById("corner");
   const toggle=document.getElementById("toggle");
@@ -214,7 +246,7 @@
   let drag=null;
   let students=[];
   let hist=[];
-  const grid=10;
+  const grid=20; // GRID B
 
   function col(){
     return "hsl("+Math.floor(Math.random()*360)+",70%,60%)";
@@ -226,104 +258,110 @@
     el.style.height=s+"px";
   }
 
-  function makeStudentContent(score,name){
-    const div=document.createElement("div");
-    div.className="sBox";
-    div.innerHTML=
-      '<div class="student-name">'+(name||'')+'</div>'+
+  function scaleTextWithBox(s){
+    const name=s.querySelector(".student-name");
+    const score=s.querySelector(".student-score");
+
+    const boxSize=parseInt(s.style.width,10);
+    let base=boxSize*0.28;
+
+    const len=name.textContent.trim().length;
+    if(len>20) base*=0.55;
+    else if(len>12) base*=0.75;
+
+    name.style.fontSize=base+"px";
+    score.style.fontSize=(base*0.9)+"px";
+  }
+
+  function makeStudent(score,name){
+    const s=document.createElement("div");
+    s.className="sBox";
+    s.style.borderColor=col();
+    s.innerHTML=
+      '<div class="student-name">'+(name||"")+'</div>'+
       '<div class="student-score">'+score+'</div>';
-    return div;
+    applySize(s);
+    scaleTextWithBox(s);
+    return s;
   }
 
-  function mkTemplate(){
+  function makeTemplate(){
     const t=document.createElement("div");
     t.className="tBox";
     t.style.borderColor=col();
-    t.innerHTML=
-      '<div class="student-name"></div>'+
-      '<div class="student-score">0</div>';
     applySize(t);
-    corner.innerHTML="";
-    corner.appendChild(t);
+    t.innerHTML='<div class="student-name"></div><div class="student-score">0</div>';
 
-    const start = e=>{
+    const start=e=>{
       if(mode!=="drag")return;
       e.preventDefault();
-      const p = e.touches ? e.touches[0] : e;
-      mkNewTemplate();
-      startDrag(t,p,"template");
+      const p=e.touches?e.touches[0]:e;
+      spawnTemplate();
+      startDrag(t,p);
     };
 
     t.onmousedown=start;
     t.ontouchstart=start;
+
+    corner.innerHTML="";
+    corner.appendChild(t);
   }
 
-  function mkNewTemplate(){
+  function spawnTemplate(){
     const t=document.createElement("div");
     t.className="tBox";
     t.style.borderColor=col();
-    t.innerHTML=
-      '<div class="student-name"></div>'+
-      '<div class="student-score">0</div>';
     applySize(t);
-    corner.innerHTML="";
-    corner.appendChild(t);
+    t.innerHTML='<div class="student-name"></div><div class="student-score">0</div>';
 
-    const start = e=>{
+    const start=e=>{
       if(mode!=="drag")return;
       e.preventDefault();
-      const p = e.touches ? e.touches[0] : e;
-      mkNewTemplate();
-      startDrag(t,p,"template");
+      const p=e.touches?e.touches[0]:e;
+      spawnTemplate();
+      startDrag(t,p);
     };
 
     t.onmousedown=start;
     t.ontouchstart=start;
+
+    corner.innerHTML="";
+    corner.appendChild(t);
   }
 
-  function startDrag(el,p,type){
-    const mainRect = main.getBoundingClientRect();
-    const r = el.getBoundingClientRect();
+  function startDrag(el,p){
+    if(mode!=="drag")return;
 
-    drag = {
+    const mainRect=main.getBoundingClientRect();
+    const r=el.getBoundingClientRect();
+
+    drag={
       el,
-      type,
-      ox: p.clientX - r.left,
-      oy: p.clientY - r.top,
-      mainX: mainRect.left,
-      mainY: mainRect.top
+      ox:p.clientX-r.left,
+      oy:p.clientY-r.top,
+      mainX:mainRect.left,
+      mainY:mainRect.top
     };
 
-    const moveHandler = ev=>{
-      ev.preventDefault();
-      const pt = ev.touches ? ev.touches[0] : ev;
-      move(pt);
-    };
-
-    const endHandler = ev=>{
-      ev.preventDefault();
-      end();
-      window.removeEventListener("mousemove",moveHandler);
-      window.removeEventListener("mouseup",endHandler);
-      window.removeEventListener("touchmove",moveHandler);
-      window.removeEventListener("touchend",endHandler);
-    };
-
-    window.addEventListener("mousemove",moveHandler,{passive:false});
-    window.addEventListener("mouseup",endHandler,{passive:false});
-    window.addEventListener("touchmove",moveHandler,{passive:false});
-    window.addEventListener("touchend",endHandler,{passive:false});
+    window.addEventListener("mousemove",dragMove,{passive:false});
+    window.addEventListener("mouseup",dragEnd,{passive:false});
+    window.addEventListener("touchmove",dragMove,{passive:false});
+    window.addEventListener("touchend",dragEnd,{passive:false});
   }
 
-  function move(p){
+  function dragMove(e){
     if(!drag)return;
+    const p=e.touches?e.touches[0]:e;
+
     const el=drag.el;
 
-    let x = p.clientX - drag.ox - drag.mainX;
-    let y = p.clientY - drag.oy - drag.mainY;
+    let x=p.clientX-drag.ox-drag.mainX;
+    let y=p.clientY-drag.oy-drag.mainY;
 
-    const w=el.offsetWidth, h=el.offsetHeight;
-    const mw=main.offsetWidth, mh=main.offsetHeight;
+    const w=el.offsetWidth;
+    const h=el.offsetHeight;
+    const mw=main.offsetWidth;
+    const mh=main.offsetHeight;
 
     x=Math.max(0,Math.min(mw-w,x));
     y=Math.max(0,Math.min(mh-h,y));
@@ -331,204 +369,168 @@
     el.style.left=x+"px";
     el.style.top=y+"px";
 
-    const c=corner.getBoundingClientRect();
-    const r=el.getBoundingClientRect();
-    const inside=r.left>=c.left && r.right<=c.right && r.top>=c.top && r.bottom<=c.bottom;
-    corner.classList.toggle("glow",inside);
+    el.style.transform="rotate(3deg)";
   }
 
   function snap(el){
     const r=el.getBoundingClientRect();
     const m=main.getBoundingClientRect();
+
     let x=r.left-m.left;
     let y=r.top-m.top;
+
     x=Math.round(x/grid)*grid;
     y=Math.round(y/grid)*grid;
+
     el.style.left=x+"px";
     el.style.top=y+"px";
-    el.classList.add("snapAnim");
-    setTimeout(()=>el.classList.remove("snapAnim"),150);
   }
 
-  function end(){
-    if(!drag)return;
-    const el=drag.el;
-    const type=drag.type;
-
-    const c=corner.getBoundingClientRect();
-    const r=el.getBoundingClientRect();
-    const inside=r.left>=c.left && r.right<=c.right && r.top>=c.top && r.bottom<=c.bottom;
-
-    corner.classList.remove("glow");
-
-    if(type==="template"){
-      if(inside){
-        el.remove();
-      }else{
-        const s=makeStudentContent(
-          el.querySelector(".student-score").textContent,
-          el.querySelector(".student-name").textContent
-        );
-        s.style.borderColor=el.style.borderColor;
-        applySize(s);
-        s.style.left=el.style.left;
-        s.style.top=el.style.top;
-        main.appendChild(s);
-        students.push(s);
-        enableStudent(s);
-        el.remove();
-        snap(s);
-      }
-    }else{
-      if(inside){
-        const i=students.indexOf(el);
-        if(i>=0)students.splice(i,1);
-        el.remove();
-      }else{
-        snap(el);
-      }
+  function dragEnd(){
+    if(drag && drag.el){
+      drag.el.style.transform="rotate(0deg)";
+      snap(drag.el);
+      scaleTextWithBox(drag.el);
     }
 
     drag=null;
+
+    window.removeEventListener("mousemove",dragMove);
+    window.removeEventListener("mouseup",dragEnd);
+    window.removeEventListener("touchmove",dragMove);
+    window.removeEventListener("touchend",dragEnd);
   }
 
   function enableStudent(s){
-    const scoreEl = ()=>s.querySelector(".student-score");
-    const nameSpan = s.querySelector(".student-name");
+    const nameSpan=s.querySelector(".student-name");
+    const scoreEl=s.querySelector(".student-score");
 
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.placeholder = "Type name…";
-    nameInput.value = nameSpan.textContent || "";
-    nameInput.className = "nameInput";
-    nameInput.style.display = "none";
+    const nameInput=document.createElement("input");
+    nameInput.type="text";
+    nameInput.placeholder="Type name…";
+    nameInput.value=nameSpan.textContent;
+    nameInput.className="nameInput";
 
-    nameSpan.replaceWith(nameInput);
+    nameInput.addEventListener("input",()=>{
+      nameSpan.textContent=nameInput.value.trim();
+      scaleTextWithBox(s);
+    });
 
-    nameInput.addEventListener("input", ()=>{
-      const txt = nameInput.value.trim();
-      nameSpan.textContent = txt;
-
-      if (txt.length > 20) {
-        nameInput.style.fontSize = "10px";
-      } else if (txt.length > 12) {
-        nameInput.style.fontSize = "12px";
-      } else {
-        nameInput.style.fontSize = "14px";
+    s.addEventListener("click",()=>{
+      if(mode==="point"){
+        scoreEl.textContent=parseInt(scoreEl.textContent,10)+1;
+        hist.push({t:"one",s});
+        scaleTextWithBox(s);
+      }
+      if(mode==="names"){
+        students.forEach(o=>{
+          const inp=o.querySelector(".nameInput");
+          if(inp && o!==s) inp.style.display="none";
+        });
+        nameInput.style.display="block";
+        nameInput.focus();
       }
     });
 
-    s.addEventListener("click", ()=>{
-      if (mode === "point") {
-        const sc = scoreEl();
-        sc.textContent = String(parseInt(sc.textContent, 10) + 1);
-        hist.push({ t:"one", s });
-      }
-    });
-
-    const start = e=>{
-      if (mode !== "drag") return;
-      e.preventDefault();
-      const p = e.touches ? e.touches[0] : e;
-      startDrag(s, p, "student");
+    s.onmousedown=e=>{
+      if(mode!=="drag")return;
+      const p=e.touches?e.touches[0]:e;
+      startDrag(s,p);
     };
 
-    s.onmousedown = start;
-    s.ontouchstart = start;
+    s.ontouchstart=e=>{
+      if(mode!=="drag")return;
+      const p=e.touches?e.touches[0]:e;
+      startDrag(s,p);
+    };
 
     function updateNameMode(){
-      if (mode === "names") {
-        nameInput.style.display = "block";
-      } else {
-        nameInput.style.display = "none";
-        nameSpan.textContent = nameInput.value.trim();
-        if (!s.contains(nameSpan)) {
-          s.insertBefore(nameSpan, s.firstChild);
-        }
+      if(mode==="names"){
+        if(!s.contains(nameInput)) s.insertBefore(nameInput,nameSpan);
+        nameSpan.style.display="none";
+        nameInput.style.display="none";
+      }else{
+        nameSpan.style.display="block";
+        if(s.contains(nameInput)) nameInput.style.display="none";
       }
     }
 
     updateNameMode();
 
-    const observer = new MutationObserver(updateNameMode);
-    observer.observe(toggle, { attributes:true });
+    const obs=new MutationObserver(updateNameMode);
+    obs.observe(toggle,{attributes:true});
   }
-
   function setMode(m){
     mode=m;
-    toggle.classList.remove("drag","point","names");
+    toggle.textContent=m.toUpperCase();
 
     if(m==="drag"){
-      toggle.textContent="DRAG";
-      toggle.classList.add("drag");
-
       corner.innerHTML="";
-      mkTemplate();
-      students.forEach(s=>s.classList.remove("noDrag"));
+      makeTemplate();
+    }
 
-    }else if(m==="point"){
-      toggle.textContent="POINT";
-      toggle.classList.add("point");
-
+    if(m==="point"){
       corner.innerHTML="";
-      const w=document.createElement("div");
-      w.className="splitWrap";
+      const wrap=document.createElement("div");
+      wrap.style.display="flex";
+      wrap.style.flexDirection="column";
+      wrap.style.alignItems="center";
+      wrap.style.justifyContent="center";
+      wrap.style.fontSize="28px";
 
-      const h1=document.createElement("div");
-      h1.className="half plus";
-      h1.textContent="ALL +1";
-
-      const h2=document.createElement("div");
-      h2.className="half undo";
-      h2.textContent="UNDO";
-
-      w.appendChild(h1);
-      w.appendChild(h2);
-      corner.appendChild(w);
-
-      h1.onclick=()=>{
+      const plus=document.createElement("button");
+      plus.textContent="ALL +1";
+      plus.onclick=()=>{
         students.forEach(s=>{
-          const sc = s.querySelector(".student-score");
-          sc.textContent=String(parseInt(sc.textContent,10)+1);
+          const sc=s.querySelector(".student-score");
+          sc.textContent=parseInt(sc.textContent,10)+1;
+          scaleTextWithBox(s);
         });
         hist.push({t:"all"});
       };
 
-      h2.onclick=()=>{
+      const undo=document.createElement("button");
+      undo.textContent="UNDO";
+      undo.onclick=()=>{
         const last=hist.pop();
         if(!last)return;
-
         if(last.t==="all"){
           students.forEach(s=>{
-            const sc = s.querySelector(".student-score");
-            sc.textContent = String(parseInt(sc.textContent,10) - 1);
+            const sc=s.querySelector(".student-score");
+            sc.textContent=parseInt(sc.textContent,10)-1;
+            scaleTextWithBox(s);
           });
         }else if(last.t==="one"){
-          const sc = last.s.querySelector(".student-score");
-          sc.textContent = String(parseInt(sc.textContent,10) - 1);
+          const sc=last.s.querySelector(".student-score");
+          sc.textContent=parseInt(sc.textContent,10)-1;
+          scaleTextWithBox(last.s);
         }
       };
 
-      students.forEach(s=>s.classList.add("noDrag"));
+      wrap.appendChild(plus);
+      wrap.appendChild(undo);
+      corner.appendChild(wrap);
+    }
 
-    }else if(m==="names"){
-      toggle.textContent="NAMES";
-      toggle.classList.add("names");
-
+    if(m==="names"){
       corner.innerHTML="";
       const info=document.createElement("div");
       info.style.textAlign="center";
-      info.innerHTML="Use the pill box above each score to type names.";
+      info.style.fontSize="24px";
+      info.textContent="Click a box to edit its name.";
       corner.appendChild(info);
-
-      students.forEach(s=>s.classList.add("noDrag"));
     }
   }
 
   sizeSlider.oninput=()=>{
-    students.forEach(applySize);
+    students.forEach(s=>{
+      applySize(s);
+      scaleTextWithBox(s);
+    });
     const t=corner.querySelector(".tBox");
-    if(t)applySize(t);
+    if(t){
+      applySize(t);
+    }
   };
 
   resetBtn.onclick=()=>{
@@ -539,10 +541,9 @@
 
   modeBtn.onclick=()=>{
     document.body.classList.toggle("light");
-    modeBtn.textContent=
-      document.body.classList.contains("light")
-      ? "DARK MODE"
-      : "LIGHT MODE";
+    modeBtn.textContent=document.body.classList.contains("light")
+      ?"DARK MODE"
+      :"LIGHT MODE";
   };
 
   function generateCode(){
@@ -551,13 +552,11 @@
       mode,
       hist:hist.map(h=>({t:h.t,index:students.indexOf(h.s)})),
       students:students.map(s=>{
-        const name = s.querySelector(".student-name").textContent;
-        const val = s.querySelector(".student-score").textContent;
-        return {
+        return{
           x:s.style.left,
           y:s.style.top,
-          val,
-          name,
+          val:s.querySelector(".student-score").textContent,
+          name:s.querySelector(".student-name").textContent,
           color:s.style.borderColor
         };
       })
@@ -573,8 +572,7 @@
   }
 
   saveBtn.onclick=()=>{
-    const code=generateCode();
-    popupCode.textContent=code;
+    popupCode.textContent=generateCode();
     popup.style.display="flex";
   };
 
@@ -603,11 +601,10 @@
       hist=[];
 
       sizeSlider.value=data.slider;
-      mode=data.mode;
-      setMode(mode);
+      setMode(data.mode);
 
       data.students.forEach(st=>{
-        const s=makeStudentContent(st.val, st.name);
+        const s=makeStudent(st.val,st.name);
         s.style.borderColor=st.color;
         applySize(s);
         s.style.left=st.x;
@@ -615,6 +612,7 @@
         main.appendChild(s);
         students.push(s);
         enableStudent(s);
+        scaleTextWithBox(s);
       });
 
       hist=[];
@@ -630,30 +628,31 @@
   };
 
   exportBtn.onclick=()=>{
-    const rows = students.map(s=>{
-      const name = s.querySelector(".student-name").textContent || "";
-      const score = parseInt(s.querySelector(".student-score").textContent,10) || 0;
-      return {name,score};
+    const rows=students.map(s=>{
+      return{
+        name:s.querySelector(".student-name").textContent,
+        score:parseInt(s.querySelector(".student-score").textContent,10)
+      };
     });
 
-    const alpha = rows.filter(r=>/^[A-Za-z]/.test(r.name));
-    const nonAlpha = rows.filter(r=>!/^[A-Za-z]/.test(r.name));
+    const alpha=rows.filter(r=>/^[A-Za-z]/.test(r.name));
+    const nonAlpha=rows.filter(r=>!/^[A-Za-z]/.test(r.name));
 
     alpha.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-    nonAlpha.sort((a,b)=>b.score - a.score);
+    nonAlpha.sort((a,b)=>b.score-a.score);
 
-    const ordered = alpha.concat(nonAlpha);
+    const ordered=alpha.concat(nonAlpha);
 
-    let csv = "Name,Score\n";
+    let csv="Name,Score\n";
     ordered.forEach(r=>{
-      csv += `"${r.name.replace(/"/g,'""')}",${r.score}\n`;
+      csv+='"'+r.name.replace(/"/g,'""')+'",'+r.score+"\n";
     });
 
-    const blob = new Blob([csv],{type:"text/csv"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "points.csv";
+    const blob=new Blob([csv],{type:"text/csv"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download="points.csv";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -666,9 +665,8 @@
     else setMode("drag");
   };
 
+  // init
   setMode("drag");
+
 })();
 </script>
-
-</body>
-</html>
