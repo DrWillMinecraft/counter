@@ -13,6 +13,28 @@ body {
   user-select: none;
 }
 
+/* LIGHT MODE */
+body.light {
+  background: #f2f2f2;
+  color: #000;
+}
+body.light #topbar { background: #ddd; }
+body.light #settingsMenu { background: #eee; }
+body.light #spawn { background: #fafafa; border-color: #ccc; }
+body.light .sBox, body.light .tBox {
+  background: #fff;
+  border-color: #000;
+  color: #000;
+}
+body.light .pointSplit button {
+  background: #ccc;
+  color: #000;
+}
+body.light #popupBox {
+  background: #fff;
+  color: #000;
+}
+
 /* TOP BAR */
 #topbar {
   height: 60px;
@@ -185,17 +207,19 @@ body {
 /* Point mode buttons */
 .pointSplit {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
 }
 
 .pointSplit button {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
+  flex: 1;
+  height: 100%;
+  font-size: 22px;
   background: #555;
   color: white;
+  border: none;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -246,7 +270,13 @@ body {
     <button id="popupClose">Close</button>
   </div>
 </div>
+
 <script>
+<!-- JS WILL BE INSERTED IN MESSAGES 2 AND 3 -->
+</script>
+
+</body>
+</html>
 (function(){
 
   const main=document.getElementById("main");
@@ -520,7 +550,6 @@ body {
     window.removeEventListener("touchmove",dragMove);
     window.removeEventListener("touchend",dragEnd);
   }
-
   function enableStudent(s){
     const nameSpan=s.querySelector(".student-name");
     const scoreEl=s.querySelector(".student-score");
@@ -580,10 +609,8 @@ body {
       toggle.style.background="#5566ff";
       spawnTemplate();
       students.forEach(s=>{
-        const nameSpan=s.querySelector(".student-name");
-        const nameInput=s.querySelector(".nameInput");
-        nameSpan.style.display="block";
-        nameInput.style.display="none";
+        s.querySelector(".student-name").style.display="block";
+        s.querySelector(".nameInput").style.display="none";
       });
     }
 
@@ -593,8 +620,16 @@ body {
       const wrap=document.createElement("div");
       wrap.className="pointSplit";
 
+      wrap.style.display="flex";
+      wrap.style.flexDirection="row";
+      wrap.style.width="100%";
+      wrap.style.height="100%";
+
       const plus=document.createElement("button");
       plus.textContent="ALL +1";
+      plus.style.flex="1";
+      plus.style.height="100%";
+      plus.style.fontSize="22px";
       plus.onclick=()=>{
         students.forEach(s=>{
           const sc=s.querySelector(".student-score");
@@ -606,6 +641,9 @@ body {
 
       const undo=document.createElement("button");
       undo.textContent="UNDO";
+      undo.style.flex="1";
+      undo.style.height="100%";
+      undo.style.fontSize="22px";
       undo.onclick=()=>{
         const last=hist.pop();
         if(!last)return;
@@ -627,10 +665,8 @@ body {
       spawn.appendChild(wrap);
 
       students.forEach(s=>{
-        const nameSpan=s.querySelector(".student-name");
-        const nameInput=s.querySelector(".nameInput");
-        nameSpan.style.display="block";
-        nameInput.style.display="none";
+        s.querySelector(".student-name").style.display="block";
+        s.querySelector(".nameInput").style.display="none";
       });
     }
 
@@ -644,10 +680,8 @@ body {
       spawn.appendChild(info);
 
       students.forEach(s=>{
-        const nameSpan=s.querySelector(".student-name");
-        const nameInput=s.querySelector(".nameInput");
-        nameSpan.style.display="none";
-        nameInput.style.display="block";
+        s.querySelector(".student-name").style.display="none";
+        s.querySelector(".nameInput").style.display="block";
       });
     }
   }
@@ -851,4 +885,3 @@ body {
   setMode("drag");
 
 })();
-</script>
